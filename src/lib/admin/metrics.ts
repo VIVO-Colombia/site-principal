@@ -68,5 +68,5 @@ export function summarizeSubscriptions(subscriptions: SubscriptionRow[], now = n
     }
   }
 
-  return { activeSubs, trials, expiredSubs, upcoming }
+  return { activeSubs, trials, expiredSubs, upcoming, premiumUsers: activeSubs }
 }

@@ -168,7 +168,6 @@ export async function getFinanceShell(userId: string) {
     listCategories(userId),
     listNotifications(userId),
     getPreferredCycleId(),
-    listAllTransactions(userId),
   ])
   const cycle = resolveActiveCycle(cycles, preferredCycleId)
 
@@ -198,6 +197,6 @@ export async function getFinanceBootstrap(userId: string) {
     scheduledPayments,
     cycleTransactions,
     ledgerTransactions,
-    transactions: cycleTransactions.slice(0, 80),
+    transactions: cycleTransactions,
   }
 }

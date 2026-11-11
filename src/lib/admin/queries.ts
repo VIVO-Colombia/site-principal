@@ -2,6 +2,15 @@ import "server-only"
 
 import { selectCurrentSubscription, summarizeSubscriptions } from "@/lib/admin/metrics"
 import { requireSupabase } from "@/lib/supabase/require"
+import type {
+  AuditLog,
+  Payment,
+  PaymentMethod,
+  PaymentRequest,
+  Plan,
+  Profile,
+  Subscription,
+} from "@/types/database"
 
 const PAGE_SIZE = 1000
 
@@ -21,15 +30,6 @@ async function fetchAll<T>(table: string, columns: string): Promise<T[]> {
 
   return rows
 }
-import type {
-  AuditLog,
-  Payment,
-  PaymentMethod,
-  PaymentRequest,
-  Plan,
-  Profile,
-  Subscription,
-} from "@/types/database"
 
 export async function listPlans(includeHidden = false) {
   const supabase = await requireSupabase()
@@ -64,10 +64,11 @@ export async function getAdminMetrics() {
     ),
     supabase.from("payment_requests").select("id", { count: "exact", head: true }).eq("status", "submitted"),
     supabase.from("payments").select("id", { count: "exact", head: true }),
-    supabase.from("subscriptions").select("user_id,status,ends_at"),
   ])
 
   const totals = summarizeSubscriptions(subscriptions)
+  const premiumUsers = totals.activeSubs + totals.trials
+  const freeUsers = Math.max((enabled.count ?? 0) - premiumUsers, 0)
 
   return {
     users: users.count ?? 0,
