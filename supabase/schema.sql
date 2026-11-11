@@ -1,6 +1,5 @@
--- Planeador · schema for authentication, subscriptions and audit.
--- Apply in the Supabase SQL editor after creating the project.
--- Financial tables belong to a later phase and are intentionally omitted.
+-- Planeador · schema of phase 1, kept as historical reference.
+-- Apply the versioned files in supabase/migrations instead of this script.
 
 create extension if not exists "pgcrypto";
 

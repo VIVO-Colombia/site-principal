@@ -1,14 +1,16 @@
 import Link from "next/link"
 
 import { CtaLink } from "@/components/marketing/cta-link"
-import { catalogPlans } from "@/config/plans"
+import { catalogPlans, type CatalogPlan } from "@/config/plans"
 import { publicRoutes } from "@/config/routes"
 import { cn } from "cn"
 
 export function PlansSection({
   compact = false,
+  items = catalogPlans,
 }: {
   compact?: boolean
+  items?: CatalogPlan[]
 }) {
   return (
     <section id="planes" className="scroll-mt-24 px-4 py-20 sm:px-6">
@@ -24,7 +26,7 @@ export function PlansSection({
           </p>
         </div>
         <div className="mt-10 grid gap-4 md:grid-cols-2">
-          {catalogPlans.map((plan) => (
+          {items.map((plan) => (
             <article
               key={plan.id}
               className={cn(

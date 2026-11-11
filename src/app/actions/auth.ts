@@ -57,6 +57,9 @@ export async function signInAction(input: unknown): Promise<ActionResult> {
   })
 
   if (error) {
+    if (/confirm/i.test(error.message)) {
+      return { error: "Confirma tu correo antes de iniciar sesión. Revisa la bandeja de entrada." }
+    }
     return { error: "Correo o contraseña incorrectos." }
   }
 
@@ -101,7 +104,7 @@ export async function signUpAction(input: unknown): Promise<ActionResult> {
 
   return {
     success:
-      "Revisa tu correo para confirmar la cuenta. Después podrás solicitar la activación de un plan.",
+      "Revisa tu correo para confirmar la cuenta. Después podrás iniciar sesión y solicitar la activación de un plan.",
   }
 }
 
@@ -163,4 +166,31 @@ export async function signOutAction() {
     await supabase.auth.signOut()
   }
   redirect(publicRoutes.login)
+}
+
+export async function updateProfileAction(input: unknown): Promise<ActionResult> {
+  const { profileSettingsSchema } = await import("@/lib/validations/finance")
+  const parsed = profileSettingsSchema.safeParse(input)
+  if (!parsed.success) {
+    return { error: parsed.error.issues[0]?.message ?? "Revisa los datos ingresados." }
+  }
+
+  const supabase = await createServerSupabaseClient()
+  if (!supabase) return missingAuthConfig()
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+  if (!user) return { error: "Inicia sesión para actualizar tu perfil." }
+
+  const { error } = await supabase
+    .from("profiles")
+    .update({
+      full_name: parsed.data.fullName,
+      timezone: parsed.data.timezone,
+    })
+    .eq("id", user.id)
+
+  if (error) return { error: "No pudimos guardar el perfil." }
+  return { success: "Perfil actualizado." }
 }

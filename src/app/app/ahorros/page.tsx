@@ -1,10 +1,13 @@
-import { ComingSoon } from "@/components/app-shell/coming-soon"
+import { EmptyState } from "@/components/shared/empty-state"
+import { requireAppAccess } from "@/lib/auth/access"
 
-export default function Page() {
+export default async function Page() {
+  await requireAppAccess()
   return (
-    <ComingSoon
+    <EmptyState
       title="Ahorros"
-      description="El seguimiento de metas de ahorro todavía no está implementado."
+      description="La estructura de categorías y aportes de ahorro ya existe. El módulo de metas se construirá sobre esos registros, sin datos simulados."
+      action={{ href: "/app/planeacion", label: "Ir a planeación" }}
     />
   )
 }

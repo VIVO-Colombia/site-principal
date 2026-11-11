@@ -1,0 +1,457 @@
+"use server"
+
+import { revalidatePath } from "next/cache"
+import { cookies } from "next/headers"
+
+import { requireWritableAppAccess } from "@/lib/auth/access"
+import { actionError, type ActionResult } from "@/lib/action-result"
+import { parseAmountInput, toAmount } from "@/lib/finance/money"
+import { CYCLE_COOKIE } from "@/lib/finance/queries"
+import { requireSupabase } from "@/lib/supabase/require"
+import {
+  accountSchema,
+  budgetSchema,
+  categorySchema,
+  cycleSchema,
+  scheduledPaymentSchema,
+  transactionSchema,
+} from "@/lib/validations/finance"
+
+function refreshFinance() {
+  revalidatePath("/app")
+  revalidatePath("/app/movimientos")
+  revalidatePath("/app/planeacion")
+  revalidatePath("/app/cuentas")
+  revalidatePath("/app/pagos")
+}
+
+export async function setActiveCycleAction(cycleId: string): Promise<ActionResult> {
+  const { requireAppAccess } = await import("@/lib/auth/access")
+  const access = await requireAppAccess()
+  if (!access.user) return { error: "Inicia sesión." }
+
+  const store = await cookies()
+  store.set(CYCLE_COOKIE, cycleId, { path: "/", sameSite: "lax" })
+  refreshFinance()
+  return { success: "Ciclo seleccionado." }
+}
+
+export async function createCycleAction(input: unknown): Promise<ActionResult> {
+  try {
+    const access = await requireWritableAppAccess()
+    const parsed = cycleSchema.safeParse(input)
+    if (!parsed.success) return { error: parsed.error.issues[0]?.message }
+    if (parsed.data.endsOn < parsed.data.startsOn) {
+      return { error: "La fecha de finalización debe ser posterior al inicio." }
+    }
+
+    const supabase = await requireSupabase()
+    const userId = access.user!.id
+
+    const { data, error } = await supabase
+      .from("financial_cycles")
+      .insert({
+        user_id: userId,
+        name: parsed.data.name,
+        starts_on: parsed.data.startsOn,
+        ends_on: parsed.data.endsOn,
+        notes: parsed.data.notes || null,
+        status: "open",
+      })
+      .select("id")
+      .single()
+
+    if (error) {
+      if (error.message.includes("financial_cycles_no_overlap")) {
+        return { error: "Ese rango se cruza con otro ciclo. Ajusta las fechas." }
+      }
+      return { error: error.message }
+    }
+
+    await supabase.rpc("seed_default_categories", { p_user_id: userId })
+
+    if (parsed.data.duplicateFromId) {
+      const [{ data: budgets }, { data: payments }] = await Promise.all([
+        supabase
+          .from("financial_budgets")
+          .select("category_id, planned_amount")
+          .eq("user_id", userId)
+          .eq("cycle_id", parsed.data.duplicateFromId),
+        supabase
+          .from("scheduled_payments")
+          .select("category_id, preferred_account_id, name, expected_amount, due_on, notes")
+          .eq("user_id", userId)
+          .eq("cycle_id", parsed.data.duplicateFromId),
+      ])
+
+      if (budgets?.length) {
+        await supabase.from("financial_budgets").insert(
+          budgets.map((row) => ({
+            user_id: userId,
+            cycle_id: data.id,
+            category_id: row.category_id,
+            planned_amount: row.planned_amount,
+          }))
+        )
+      }
+
+      if (payments?.length) {
+        await supabase.from("scheduled_payments").insert(
+          payments.map((row) => ({
+            user_id: userId,
+            cycle_id: data.id,
+            category_id: row.category_id,
+            preferred_account_id: row.preferred_account_id,
+            name: row.name,
+            expected_amount: row.expected_amount,
+            due_on: row.due_on,
+            notes: row.notes,
+            paid_amount: 0,
+            status: "pending",
+          }))
+        )
+      }
+    }
+
+    const store = await cookies()
+    store.set(CYCLE_COOKIE, data.id, { path: "/", sameSite: "lax" })
+    refreshFinance()
+    return { success: "Ciclo creado.", id: data.id }
+  } catch (error) {
+    return actionError(error, "No pudimos crear el ciclo.")
+  }
+}
+
+export async function updateCycleAction(id: string, input: unknown): Promise<ActionResult> {
+  try {
+    const access = await requireWritableAppAccess()
+    const parsed = cycleSchema.safeParse(input)
+    if (!parsed.success) return { error: parsed.error.issues[0]?.message }
+    const supabase = await requireSupabase()
+
+    const { data: txs } = await supabase
+      .from("financial_transactions")
+      .select("occurred_on")
+      .eq("user_id", access.user!.id)
+      .eq("cycle_id", id)
+      .eq("status", "posted")
+
+    if (txs?.length) {
+      const dates = txs.map((row) => row.occurred_on as string).sort()
+      if (parsed.data.startsOn > dates[0]! || parsed.data.endsOn < dates[dates.length - 1]!) {
+        return { error: "No puedes acortar el ciclo por fuera de los movimientos ya registrados." }
+      }
+    }
+
+    const { error } = await supabase
+      .from("financial_cycles")
+      .update({
+        name: parsed.data.name,
+        starts_on: parsed.data.startsOn,
+        ends_on: parsed.data.endsOn,
+        notes: parsed.data.notes || null,
+      })
+      .eq("id", id)
+      .eq("user_id", access.user!.id)
+
+    if (error) return { error: error.message }
+    refreshFinance()
+    return { success: "Ciclo actualizado." }
+  } catch (error) {
+    return actionError(error, "No pudimos actualizar el ciclo.")
+  }
+}
+
+export async function setCycleStatusAction(id: string, status: "open" | "closed"): Promise<ActionResult> {
+  try {
+    const access = await requireWritableAppAccess()
+    const supabase = await requireSupabase()
+    const { error } = await supabase
+      .from("financial_cycles")
+      .update({ status })
+      .eq("id", id)
+      .eq("user_id", access.user!.id)
+    if (error) return { error: error.message }
+    refreshFinance()
+    return { success: status === "closed" ? "Ciclo cerrado." : "Ciclo reabierto." }
+  } catch (error) {
+    return actionError(error, "No pudimos cambiar el estado del ciclo.")
+  }
+}
+
+export async function upsertAccountAction(input: unknown): Promise<ActionResult> {
+  try {
+    const access = await requireWritableAppAccess()
+    const parsed = accountSchema.safeParse(input)
+    if (!parsed.success) return { error: parsed.error.issues[0]?.message }
+    const supabase = await requireSupabase()
+    const openingRaw = parsed.data.openingBalance?.trim() ?? ""
+    const opening = !openingRaw || openingRaw === "0" ? 0 : parseAmountInput(openingRaw)
+
+    if (parsed.data.id) {
+      const { error } = await supabase
+        .from("financial_accounts")
+        .update({
+          name: parsed.data.name,
+          kind: parsed.data.kind,
+          notes: parsed.data.notes || null,
+        })
+        .eq("id", parsed.data.id)
+        .eq("user_id", access.user!.id)
+      if (error) return { error: error.message }
+      refreshFinance()
+      return { success: "Cuenta actualizada." }
+    }
+
+    const { error } = await supabase.from("financial_accounts").insert({
+      user_id: access.user!.id,
+      name: parsed.data.name,
+      kind: parsed.data.kind,
+      opening_balance: opening,
+      notes: parsed.data.notes || null,
+    })
+    if (error) return { error: error.message }
+    refreshFinance()
+    return { success: "Cuenta creada." }
+  } catch (error) {
+    return actionError(error, "No pudimos guardar la cuenta.")
+  }
+}
+
+export async function setAccountActiveAction(id: string, isActive: boolean): Promise<ActionResult> {
+  try {
+    const access = await requireWritableAppAccess()
+    const supabase = await requireSupabase()
+    const { error } = await supabase
+      .from("financial_accounts")
+      .update({ is_active: isActive })
+      .eq("id", id)
+      .eq("user_id", access.user!.id)
+    if (error) return { error: error.message }
+    refreshFinance()
+    return { success: isActive ? "Cuenta reactivada." : "Cuenta desactivada." }
+  } catch (error) {
+    return actionError(error, "No pudimos cambiar la cuenta.")
+  }
+}
+
+export async function upsertCategoryAction(input: unknown): Promise<ActionResult> {
+  try {
+    const access = await requireWritableAppAccess()
+    const parsed = categorySchema.safeParse(input)
+    if (!parsed.success) return { error: parsed.error.issues[0]?.message }
+    const supabase = await requireSupabase()
+
+    if (parsed.data.id) {
+      const { error } = await supabase
+        .from("financial_categories")
+        .update({ name: parsed.data.name, group_code: parsed.data.groupCode })
+        .eq("id", parsed.data.id)
+        .eq("user_id", access.user!.id)
+      if (error) return { error: error.message }
+      refreshFinance()
+      return { success: "Categoría actualizada." }
+    }
+
+    const { error } = await supabase.from("financial_categories").insert({
+      user_id: access.user!.id,
+      name: parsed.data.name,
+      group_code: parsed.data.groupCode,
+    })
+    if (error) return { error: error.message }
+    refreshFinance()
+    return { success: "Categoría creada." }
+  } catch (error) {
+    return actionError(error, "No pudimos guardar la categoría.")
+  }
+}
+
+export async function deactivateCategoryAction(id: string): Promise<ActionResult> {
+  try {
+    const access = await requireWritableAppAccess()
+    const supabase = await requireSupabase()
+    const { error } = await supabase
+      .from("financial_categories")
+      .update({ is_active: false })
+      .eq("id", id)
+      .eq("user_id", access.user!.id)
+    if (error) return { error: error.message }
+    refreshFinance()
+    return { success: "Categoría desactivada. Se conserva porque puede tener movimientos." }
+  } catch (error) {
+    return actionError(error, "No pudimos desactivar la categoría.")
+  }
+}
+
+export async function saveBudgetAction(input: unknown): Promise<ActionResult> {
+  try {
+    const access = await requireWritableAppAccess()
+    const parsed = budgetSchema.safeParse(input)
+    if (!parsed.success) return { error: parsed.error.issues[0]?.message }
+    const supabase = await requireSupabase()
+    const planned = parsed.data.plannedAmount ? toAmount(parsed.data.plannedAmount.replace(",", ".")) : 0
+
+    const { error } = await supabase.from("financial_budgets").upsert(
+      {
+        user_id: access.user!.id,
+        cycle_id: parsed.data.cycleId,
+        category_id: parsed.data.categoryId,
+        planned_amount: planned,
+      },
+      { onConflict: "cycle_id,category_id" }
+    )
+    if (error) return { error: error.message }
+    refreshFinance()
+    return { success: "Presupuesto guardado." }
+  } catch (error) {
+    return actionError(error, "No pudimos guardar el presupuesto.")
+  }
+}
+
+export async function saveTransactionAction(input: unknown): Promise<ActionResult> {
+  try {
+    const access = await requireWritableAppAccess()
+    const parsed = transactionSchema.safeParse(input)
+    if (!parsed.success) return { error: parsed.error.issues[0]?.message }
+    const amount = parseAmountInput(parsed.data.amount)
+
+    if (parsed.data.kind === "transfer" && !parsed.data.counterpartyAccountId) {
+      return { error: "Selecciona la cuenta destino." }
+    }
+    if (parsed.data.kind === "transfer" && parsed.data.counterpartyAccountId === parsed.data.accountId) {
+      return { error: "La transferencia debe ocurrir entre dos cuentas distintas." }
+    }
+
+    const supabase = await requireSupabase()
+    const payload = {
+      user_id: access.user!.id,
+      cycle_id: parsed.data.cycleId,
+      account_id: parsed.data.accountId,
+      counterparty_account_id: parsed.data.kind === "transfer" ? parsed.data.counterpartyAccountId : null,
+      category_id: parsed.data.kind === "transfer" ? null : parsed.data.categoryId || null,
+      scheduled_payment_id: parsed.data.scheduledPaymentId || null,
+      kind: parsed.data.kind,
+      amount,
+      occurred_on: parsed.data.occurredOn,
+      description: parsed.data.description || null,
+      notes: parsed.data.notes || null,
+      status: "posted",
+    }
+
+    if (parsed.data.id) {
+      const { error } = await supabase
+        .from("financial_transactions")
+        .update(payload)
+        .eq("id", parsed.data.id)
+        .eq("user_id", access.user!.id)
+        .eq("status", "posted")
+      if (error) return { error: error.message }
+      refreshFinance()
+      return { success: "Movimiento actualizado." }
+    }
+
+    const { error } = await supabase.from("financial_transactions").insert(payload)
+    if (error) return { error: error.message }
+    refreshFinance()
+    return { success: "Movimiento registrado." }
+  } catch (error) {
+    return actionError(error, "No pudimos guardar el movimiento.")
+  }
+}
+
+export async function voidTransactionAction(id: string): Promise<ActionResult> {
+  try {
+    const access = await requireWritableAppAccess()
+    const supabase = await requireSupabase()
+    const { error } = await supabase
+      .from("financial_transactions")
+      .update({ status: "voided", voided_at: new Date().toISOString() })
+      .eq("id", id)
+      .eq("user_id", access.user!.id)
+    if (error) return { error: error.message }
+    refreshFinance()
+    return { success: "Movimiento anulado." }
+  } catch (error) {
+    return actionError(error, "No pudimos anular el movimiento.")
+  }
+}
+
+export async function upsertScheduledPaymentAction(input: unknown): Promise<ActionResult> {
+  try {
+    const access = await requireWritableAppAccess()
+    const parsed = scheduledPaymentSchema.safeParse(input)
+    if (!parsed.success) return { error: parsed.error.issues[0]?.message }
+    const expected = parseAmountInput(parsed.data.expectedAmount)
+    const supabase = await requireSupabase()
+
+    const payload = {
+      user_id: access.user!.id,
+      cycle_id: parsed.data.cycleId,
+      category_id: parsed.data.categoryId || null,
+      preferred_account_id: parsed.data.preferredAccountId || null,
+      name: parsed.data.name,
+      expected_amount: expected,
+      due_on: parsed.data.dueOn,
+      notes: parsed.data.notes || null,
+    }
+
+    if (parsed.data.id) {
+      const { error } = await supabase
+        .from("scheduled_payments")
+        .update(payload)
+        .eq("id", parsed.data.id)
+        .eq("user_id", access.user!.id)
+      if (error) return { error: error.message }
+      refreshFinance()
+      return { success: "Compromiso actualizado." }
+    }
+
+    const { error } = await supabase.from("scheduled_payments").insert({
+      ...payload,
+      paid_amount: 0,
+      status: "pending",
+    })
+    if (error) return { error: error.message }
+    refreshFinance()
+    return { success: "Compromiso creado." }
+  } catch (error) {
+    return actionError(error, "No pudimos guardar el compromiso.")
+  }
+}
+
+export async function recordScheduledPaymentAction(input: {
+  scheduledPaymentId: string
+  amount: string
+  accountId: string
+  occurredOn: string
+  cycleId: string
+}): Promise<ActionResult> {
+  return saveTransactionAction({
+    kind: "expense",
+    amount: input.amount,
+    occurredOn: input.occurredOn,
+    accountId: input.accountId,
+    cycleId: input.cycleId,
+    scheduledPaymentId: input.scheduledPaymentId,
+    description: "Pago de compromiso",
+  })
+}
+
+export async function markNotificationReadAction(id: string): Promise<ActionResult> {
+  try {
+    const { requireAppAccess } = await import("@/lib/auth/access")
+    const access = await requireAppAccess()
+    const supabase = await requireSupabase()
+    const { error } = await supabase
+      .from("in_app_notifications")
+      .update({ read_at: new Date().toISOString() })
+      .eq("id", id)
+      .eq("user_id", access.user!.id)
+    if (error) return { error: error.message }
+    revalidatePath("/app/notificaciones")
+    revalidatePath("/app")
+    return { success: "Marcada como leída." }
+  } catch (error) {
+    return actionError(error, "No pudimos actualizar la notificación.")
+  }
+}

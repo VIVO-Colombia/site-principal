@@ -1,10 +1,12 @@
-import { ComingSoon } from "@/components/app-shell/coming-soon"
+import { EmptyState } from "@/components/shared/empty-state"
+import { requireAppAccess } from "@/lib/auth/access"
 
-export default function Page() {
+export default async function Page() {
+  await requireAppAccess()
   return (
-    <ComingSoon
+    <EmptyState
       title="Calculadoras"
-      description="Las simulaciones de cuotas e intereses se preservarán del archivo original. Aún no están disponibles."
+      description="Esta sección está reservada. No se publican fórmulas hasta contrastarlas con el archivo Excel original."
     />
   )
 }

@@ -4,16 +4,18 @@
 
 1. Crea un proyecto en [Supabase](https://supabase.com).
 2. Copia `Project URL` y `anon public` a `.env.local`.
-3. Copia `service_role` solo al servidor. Nunca la expongas al navegador.
+3. Copia `service_role` solo al servidor o al SQL Editor. Nunca la expongas al navegador.
 
-## 2. Aplicar el esquema
+## 2. Aplicar migraciones
 
-Ejecuta `schema.sql` en el SQL Editor. Eso crea:
+Ejecuta en el SQL Editor, **en este orden**:
 
-- `profiles` (rol por defecto `user`)
-- `plans`, `subscriptions`, `payment_requests`, `payments`
-- `payment_methods`, `subscription_events`, `audit_logs`
-- RLS y un trigger que impide autoasignarse `super_admin`
+1. `migrations/0001_identity_and_billing.sql`
+2. `migrations/0002_admin_functions.sql`
+3. `migrations/0003_finance.sql`
+4. `migrations/0004_rls.sql`
+
+`schema.sql` queda como referencia de la fase 1. No lo ejecutes encima de las migraciones versionadas.
 
 ## 3. Autenticación
 
@@ -26,22 +28,33 @@ En URL configuration:
   - `http://localhost:3000/auth/callback`
   - `https://TU-DOMINIO/auth/callback`
 
-Activa la confirmación de correo.
+Activa la confirmación de correo. Plantillas: confirmación y recuperación.
 
-## 4. Asignar Super Admin
+## 4. Primer Super Admin
 
-El registro público siempre crea `role = user`. Para promover una cuenta ya existente:
+El registro público **siempre** crea `role = user`. No existe un endpoint ni un formulario que eleve privilegios.
+
+1. Crea la cuenta con el flujo normal de `/registro`.
+2. Confirma el correo.
+3. Copia el UUID de `auth.users.id` (Authentication > Users).
+4. En el SQL Editor, como dueño de la base (no como usuario autenticado de la app), ejecuta:
 
 ```sql
-update public.profiles
-set role = 'super_admin'
-where id = (
-  select id from auth.users where email = 'correo-del-admin@dominio'
-);
+select public.provision_first_super_admin('00000000-0000-0000-0000-000000000000'::uuid, 'aprovisionamiento inicial');
 ```
 
-Hazlo solo desde el SQL Editor o un procedimiento interno. No existe un control en la interfaz de registro para elegir este rol.
+Sustituye el UUID. La función:
+
+- no acepta correos ni contraseñas
+- no está otorgada a `anon` ni `authenticated`
+- escribe auditoría y el historial en `user_roles`
+
+Si ya existe un Super Admin, solo otro Super Admin (sesión) o el dueño de la base pueden usarla.
 
 ## 5. Storage de comprobantes
 
-Crea un bucket privado `receipts` cuando se implemente la carga de comprobantes. No lo dejes público.
+La migración 0004 crea el bucket privado `receipts` cuando el esquema `storage` está disponible. Comprueba en Storage que **no** es público.
+
+## 6. Turnstile
+
+Configura las claves en `.env.local`. En desarrollo, si faltan, la verificación se omite. En producción es obligatoria.

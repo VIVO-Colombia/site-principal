@@ -21,6 +21,7 @@ export function RegisterForm({ plan }: { plan?: string }) {
   const [message, setMessage] = useState<string | null>(null)
   const [serverError, setServerError] = useState<string | null>(null)
   const [acceptedTerms, setAcceptedTerms] = useState(false)
+  const [acceptedPrivacy, setAcceptedPrivacy] = useState(false)
   const form = useForm<RegisterValues>({
     resolver: zodResolver(registerSchema),
     defaultValues: {
@@ -29,6 +30,7 @@ export function RegisterForm({ plan }: { plan?: string }) {
       password: "",
       confirmPassword: "",
       terms: false,
+      privacy: false,
       turnstileToken: "",
     },
   })
@@ -104,17 +106,34 @@ export function RegisterForm({ plan }: { plan?: string }) {
         <span>
           Acepto los{" "}
           <Link href={publicRoutes.terms} className="font-medium text-primary hover:underline">
-            términos
-          </Link>{" "}
-          y el tratamiento de datos descrito en{" "}
-          <Link href={publicRoutes.privacy} className="font-medium text-primary hover:underline">
-            privacidad
+            términos y condiciones
           </Link>
           .
         </span>
       </label>
       {form.formState.errors.terms ? (
         <p className="text-sm text-destructive">{form.formState.errors.terms.message}</p>
+      ) : null}
+      <label className="flex items-start gap-3 text-sm leading-5">
+        <Checkbox
+          className="mt-0.5"
+          checked={acceptedPrivacy}
+          onCheckedChange={(checked) => {
+            const value = Boolean(checked)
+            setAcceptedPrivacy(value)
+            form.setValue("privacy", value, { shouldValidate: true })
+          }}
+        />
+        <span>
+          Autorizo el tratamiento de datos descrito en{" "}
+          <Link href={publicRoutes.privacy} className="font-medium text-primary hover:underline">
+            privacidad
+          </Link>
+          .
+        </span>
+      </label>
+      {form.formState.errors.privacy ? (
+        <p className="text-sm text-destructive">{form.formState.errors.privacy.message}</p>
       ) : null}
       <TurnstileField onSuccess={(token) => form.setValue("turnstileToken", token)} />
       {serverError ? <p className="text-sm text-destructive">{serverError}</p> : null}
