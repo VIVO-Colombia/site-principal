@@ -5,8 +5,8 @@ import { marketingAnchors, publicRoutes } from "@/config/routes"
 
 export function Hero() {
   return (
-    <section className="relative overflow-x-clip px-4 pt-6 pb-10 sm:px-6 sm:pt-14 lg:overflow-hidden lg:pt-12 lg:pb-24">
-      <div className="mx-auto grid w-full max-w-6xl items-start gap-8 lg:grid-cols-[minmax(0,0.92fr)_minmax(0,1.08fr)] lg:gap-10 lg:pt-2">
+    <section className="relative overflow-x-clip px-4 pt-6 pb-10 sm:px-6 sm:pt-14 lg:pt-12 lg:pb-16">
+      <div className="mx-auto grid w-full max-w-6xl items-center gap-8 lg:grid-cols-[minmax(0,26rem)_minmax(0,1fr)] lg:gap-8 lg:pt-2">
         <div className="animate-fade-up relative z-10 max-w-xl lg:pt-8">
           <p className="text-sm font-medium tracking-[0.18em] text-primary uppercase">
             Finanzas personales

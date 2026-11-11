@@ -8,18 +8,12 @@ export function HeroComposition() {
     <div className="relative mx-auto w-full min-w-0">
       <div className="pointer-events-none absolute inset-0 hero-grid max-lg:opacity-50" />
 
-      <div className="relative hidden h-[640px] overflow-hidden lg:block">
-        <div className="absolute top-4 right-2 origin-top-right scale-[0.82] rotate-[5deg]">
+      <div className="relative hidden items-stretch gap-4 lg:flex">
+        <div className="min-w-0 flex-1">
           <DesktopDashboardPreview />
         </div>
-        <div className="absolute top-14 left-2 z-20">
-          <BalanceCard />
-        </div>
-        <div className="absolute bottom-16 left-2 z-20">
-          <UpcomingPaymentCard />
-        </div>
-        <div className="absolute right-6 bottom-0 z-30">
-          <PhoneFrame compact>
+        <div className="relative z-10 w-[15.5rem] shrink-0">
+          <PhoneFrame compact className="w-full max-w-none">
             <MobileAppPreview />
           </PhoneFrame>
         </div>

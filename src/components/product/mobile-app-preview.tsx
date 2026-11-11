@@ -15,7 +15,7 @@ export function MobileAppPreview({ tall = false }: { tall?: boolean }) {
   const usedWidth = `${demoFinance.budgetPercent}%`
 
   return (
-    <div className={`flex flex-col bg-[#f7f9fc] ${tall ? "min-h-[560px]" : "min-h-[520px]"}`}>
+    <div className={`flex flex-col bg-[#f7f9fc] ${tall ? "min-h-[560px]" : "min-h-[480px]"}`}>
       <div className="flex items-center justify-between px-5 pt-4 pb-1 text-[11px] font-medium text-[#5b6b82]">
         <span>9:41</span>
         <span className="flex items-center gap-1">
@@ -23,19 +23,19 @@ export function MobileAppPreview({ tall = false }: { tall?: boolean }) {
         </span>
       </div>
 
-      <div className="flex items-center justify-between px-5 pt-3">
-        <div>
-          <p className="text-[11px] text-[#5b6b82]">Ciclo actual</p>
-          <p className="text-[13px] font-semibold tracking-tight text-[#17243c]">
+      <div className="flex items-center justify-between gap-3 px-4 pt-3">
+        <div className="min-w-0">
+          <div className="flex items-center gap-2">
+            <p className="text-[11px] text-[#5b6b82]">Ciclo actual</p>
+            <DemoBadge />
+          </div>
+          <p className="mt-0.5 whitespace-nowrap text-[13px] font-semibold tracking-tight text-[#17243c]">
             {demoFinance.cycleLabel}
           </p>
         </div>
-        <div className="flex items-center gap-2">
-          <DemoBadge />
-          <span className="grid size-9 place-items-center rounded-full bg-white ring-1 ring-[#e5eaf1]">
-            <Bell className="size-4 text-[#17243c]" />
-          </span>
-        </div>
+        <span className="grid size-9 shrink-0 place-items-center rounded-full bg-white ring-1 ring-[#e5eaf1]">
+          <Bell className="size-4 text-[#17243c]" />
+        </span>
       </div>
 
       <div className="mx-4 mt-4 rounded-3xl bg-[#17243c] px-5 py-5 text-white">
