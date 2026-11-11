@@ -1,4 +1,4 @@
-# Planeador
+# VIVO Planner
 
 Plataforma web de finanzas personales. El nombre se centraliza en `src/config/brand.ts` (`NEXT_PUBLIC_PRODUCT_NAME` puede sobreescribirlo).
 

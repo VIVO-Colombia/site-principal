@@ -30,7 +30,7 @@ export function SiteHeader({ inverted = false }: { inverted?: boolean }) {
     >
       <div className="mx-auto flex h-16 w-full max-w-6xl items-center justify-between px-4 sm:px-6">
         <Link href={publicRoutes.home} className="min-h-11 min-w-11 rounded-lg">
-          <Logo inverted={inverted} />
+          <Logo inverted={inverted} priority />
         </Link>
 
         <nav className="hidden items-center gap-1 lg:flex" aria-label="Principal">
@@ -52,7 +52,7 @@ export function SiteHeader({ inverted = false }: { inverted?: boolean }) {
           >
             Iniciar sesión
           </Link>
-          <CtaLink href={publicRoutes.register}>Comenzar</CtaLink>
+          <CtaLink href={publicRoutes.register}>Crear cuenta</CtaLink>
         </div>
 
         <Sheet open={open} onOpenChange={setOpen}>
@@ -92,7 +92,7 @@ export function SiteHeader({ inverted = false }: { inverted?: boolean }) {
               </Link>
               <div className="px-3 pt-3">
                 <CtaLink href={publicRoutes.register} className="w-full">
-                  Comenzar
+                  Crear cuenta
                 </CtaLink>
               </div>
             </nav>

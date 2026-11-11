@@ -13,16 +13,16 @@ export function PlansSection({
   items?: CatalogPlan[]
 }) {
   return (
-    <section id="planes" className="scroll-mt-24 px-4 py-20 sm:px-6">
+    <section id="planes" className="scroll-mt-24 px-4 py-16 sm:px-6 sm:py-20">
       <div className="mx-auto max-w-6xl">
         <div className="max-w-2xl">
           <p className="text-sm font-medium text-primary">Planes</p>
           <h2 className="mt-3 text-3xl font-semibold tracking-tight sm:text-4xl">
-            Elige una vigencia. El importe se confirma al solicitar acceso.
+            Elige vigencia. El valor te lo confirmamos.
           </h2>
           <p className="mt-3 text-[#5b6b82]">
-            El cobro inicial es manual. No hay pagos en línea en esta etapa ni precios publicados
-            hasta que el catálogo quede definido en la base de datos.
+            Activación manual con comprobante. Sin cobro automático por ahora y sin letra pequeña
+            escondida en una pasarela.
           </p>
         </div>
         <div className="mt-10 grid gap-4 md:grid-cols-2">
@@ -38,7 +38,7 @@ export function PlansSection({
               <h3 className="mt-2 text-2xl font-semibold tracking-tight">{plan.name}</h3>
               <p className="mt-2 text-sm leading-6 text-[#5b6b82]">{plan.summary}</p>
               <p className="mt-5 rounded-2xl bg-[#f7f9fc] px-4 py-3 text-sm font-medium">
-                Precio por confirmar al solicitar acceso
+                Precio al solicitar acceso
               </p>
               <ul className="mt-5 space-y-2 text-sm text-[#3d4d66]">
                 {plan.features.map((feature) => (
@@ -62,7 +62,7 @@ export function PlansSection({
         </div>
         {!compact ? (
           <p className="mt-6 text-sm text-[#5b6b82]">
-            También puedes revisar el detalle en{" "}
+            Detalle y vigencias también en{" "}
             <Link href={publicRoutes.plans} className="font-medium text-primary hover:underline">
               la página de planes
             </Link>

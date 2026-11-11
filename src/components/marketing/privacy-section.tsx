@@ -3,29 +3,29 @@ import { KeyRound, Shield, UserRound } from "lucide-react"
 const points = [
   {
     icon: UserRound,
-    title: "Espacio independiente",
-    body: "Cada cuenta tiene sus propias finanzas. Un usuario no consulta los movimientos de otro.",
+    title: "Tu espacio, tus números",
+    body: "Cada cuenta ve solo sus ciclos, movimientos y pagos. Nadie más entra a tu planeación.",
   },
   {
     icon: KeyRound,
-    title: "Acceso protegido",
-    body: "El ingreso usa autenticación por correo y contraseña. Las rutas privadas se validan en el servidor.",
+    title: "Acceso con correo",
+    body: "Entrada con correo y contraseña. Las rutas privadas se validan en el servidor, no en el navegador.",
   },
   {
     icon: Shield,
-    title: "Sin afirmaciones excesivas",
-    body: "No publicamos certificaciones ni capacidades de seguridad que todavía no estén implementadas.",
+    title: "Datos que se quedan",
+    body: "Si el plan vence, consultas y exportas. Nadie borra tu historial para presionarte a renovar.",
   },
 ]
 
 export function PrivacySection() {
   return (
-    <section id="privacidad" className="scroll-mt-24 px-4 py-20 sm:px-6">
+    <section id="privacidad" className="scroll-mt-24 px-4 py-16 sm:px-6 sm:py-20">
       <div className="mx-auto max-w-6xl">
         <div className="max-w-2xl">
           <p className="text-sm font-medium text-primary">Privacidad</p>
           <h2 className="mt-3 text-3xl font-semibold tracking-tight sm:text-4xl">
-            Tus finanzas son solo tuyas.
+            Tus finanzas no se mezclan con las de nadie.
           </h2>
         </div>
         <div className="mt-10 grid gap-4 md:grid-cols-3">

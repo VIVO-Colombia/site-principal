@@ -7,12 +7,12 @@ export default function MarketingLayout({
   children: React.ReactNode
 }) {
   return (
-    <>
+    <div className="marketing-scope flex flex-1 flex-col">
       <SiteHeader />
       <div id="contenido" className="flex-1">
         {children}
       </div>
       <SiteFooter />
-    </>
+    </div>
   )
 }

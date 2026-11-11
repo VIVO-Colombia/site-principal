@@ -1,3 +1,5 @@
+import Image from "next/image"
+
 import { cn } from "cn"
 
 import { productName } from "@/config/brand"
@@ -7,6 +9,7 @@ type LogoProps = {
   markClassName?: string
   showWordmark?: boolean
   inverted?: boolean
+  priority?: boolean
 }
 
 export function Logo({
@@ -14,6 +17,7 @@ export function Logo({
   markClassName,
   showWordmark = true,
   inverted = false,
+  priority = false,
 }: LogoProps) {
   const name = productName()
 
@@ -21,32 +25,24 @@ export function Logo({
     <span className={cn("inline-flex items-center gap-2.5", className)}>
       <span
         className={cn(
-          "grid size-8 place-items-center rounded-[10px] bg-primary text-primary-foreground shadow-[0_1px_0_rgb(255_255_255_/_0.25)_inset]",
-          inverted && "bg-white text-primary",
+          "relative grid size-8 place-items-center overflow-hidden rounded-[9px]",
+          inverted && "bg-white",
           markClassName
         )}
-        aria-hidden="true"
       >
-        <svg viewBox="0 0 24 24" className="size-[18px]" fill="none">
-          <path
-            d="M6 15.5c2.2-0.2 3.4-2.6 5-5.2 1.4-2.2 2.7-3.6 5-3.3"
-            stroke="currentColor"
-            strokeWidth="1.8"
-            strokeLinecap="round"
-          />
-          <path
-            d="M14.2 7h4.3v4.2"
-            stroke="currentColor"
-            strokeWidth="1.8"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-        </svg>
+        <Image
+          src="/brand/vivo-mark.png"
+          alt=""
+          width={32}
+          height={32}
+          priority={priority}
+          className="size-8"
+        />
       </span>
       {showWordmark ? (
         <span
           className={cn(
-            "text-[17px] font-semibold tracking-[-0.03em] text-foreground",
+            "font-heading text-[17px] font-semibold tracking-[-0.03em] whitespace-nowrap text-foreground",
             inverted && "text-white"
           )}
         >

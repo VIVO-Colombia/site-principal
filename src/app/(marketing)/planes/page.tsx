@@ -9,7 +9,7 @@ import { listPlans } from "@/lib/admin/queries"
 
 export const metadata: Metadata = {
   title: "Planes",
-  description: `Solicita acceso a ${productName()}. El cobro inicial es manual y el importe se confirma al activar el plan.`,
+  description: `Elige vigencia y solicita acceso a ${productName()}. El cobro es manual y el valor se confirma al activar.`,
 }
 
 export default function PlansPage() {
