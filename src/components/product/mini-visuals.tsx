@@ -108,6 +108,7 @@ export function AnalysisMini() {
             stroke="#2563EB"
             strokeWidth={2}
             fill="url(#gastos)"
+            isAnimationActive={false}
           />
         </AreaChart>
       </ResponsiveContainer>

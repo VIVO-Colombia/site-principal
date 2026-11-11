@@ -12,10 +12,10 @@ export function HeroComposition() {
         <div className="absolute top-4 right-2 origin-top-right scale-[0.82] rotate-[5deg]">
           <DesktopDashboardPreview />
         </div>
-        <div className="absolute top-14 left-2 z-20 animate-float">
+        <div className="absolute top-14 left-2 z-20">
           <BalanceCard />
         </div>
-        <div className="absolute bottom-16 left-2 z-20 animate-float delay-200">
+        <div className="absolute bottom-16 left-2 z-20">
           <UpcomingPaymentCard />
         </div>
         <div className="absolute right-6 bottom-0 z-30">
