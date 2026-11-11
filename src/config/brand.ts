@@ -1,5 +1,5 @@
 export const brand = {
-  name: process.env.NEXT_PUBLIC_PRODUCT_NAME?.trim() || "Planeador",
+  name: process.env.NEXT_PUBLIC_PRODUCT_NAME?.trim() || "VIVO Planner",
   tagline: "Ve cuánto te queda. Antes de gastarlo.",
   description:
     "Ingresos, gastos, presupuesto y pagos en un solo ciclo. Tú eliges las fechas. El sistema te dice qué puedes gastar hoy.",

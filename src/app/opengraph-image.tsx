@@ -1,3 +1,6 @@
+import { readFile } from "node:fs/promises"
+import { join } from "node:path"
+
 import { ImageResponse } from "next/og"
 
 import { brand, productName } from "@/config/brand"
@@ -6,7 +9,9 @@ export const alt = `${productName()} · ${brand.tagline}`
 export const size = { width: 1200, height: 630 }
 export const contentType = "image/png"
 
-export default function OpenGraphImage() {
+export default async function OpenGraphImage() {
+  const mark = await readFile(join(process.cwd(), "public/brand/vivo-mark.png"))
+
   return new ImageResponse(
     (
       <div
@@ -25,18 +30,16 @@ export default function OpenGraphImage() {
             display: "flex",
             alignItems: "center",
             gap: 16,
-            color: "#2563EB",
+            color: "#17243C",
             fontSize: 28,
             fontWeight: 600,
           }}
         >
-          <div
-            style={{
-              width: 48,
-              height: 48,
-              borderRadius: 12,
-              background: "#2563EB",
-            }}
+          <img
+            src={`data:image/png;base64,${mark.toString("base64")}`}
+            width={56}
+            height={56}
+            alt=""
           />
           {productName()}
         </div>

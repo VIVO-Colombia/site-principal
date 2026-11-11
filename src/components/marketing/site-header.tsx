@@ -30,7 +30,7 @@ export function SiteHeader({ inverted = false }: { inverted?: boolean }) {
     >
       <div className="mx-auto flex h-16 w-full max-w-6xl items-center justify-between px-4 sm:px-6">
         <Link href={publicRoutes.home} className="min-h-11 min-w-11 rounded-lg">
-          <Logo inverted={inverted} />
+          <Logo inverted={inverted} priority />
         </Link>
 
         <nav className="hidden items-center gap-1 lg:flex" aria-label="Principal">
