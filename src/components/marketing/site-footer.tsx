@@ -11,7 +11,8 @@ export function SiteFooter() {
         <div>
           <Logo />
           <p className="mt-4 max-w-xs text-sm leading-6 text-[#5b6b82]">
-            Planeación financiera personal, pensada para usarse todos los días desde el celular.
+            Finanzas personales para el día a día: ciclo, presupuesto, movimientos y pagos. Desde el
+            celular.
           </p>
         </div>
         <div>
@@ -47,7 +48,7 @@ export function SiteFooter() {
       </div>
       <div className="border-t border-[#e5eaf1]">
         <p className="mx-auto max-w-6xl px-4 py-5 text-xs text-[#5b6b82] sm:px-6">
-          {productName()} · Los módulos financieros se irán habilitando por etapas.
+          {productName()} · Hecho para saber cuánto te queda.
         </p>
       </div>
     </footer>

@@ -14,12 +14,12 @@ export function FaqSection() {
       <div className="mx-auto max-w-3xl">
         <p className="text-sm font-medium text-primary">Preguntas frecuentes</p>
         <h2 className="mt-3 text-3xl font-semibold tracking-tight sm:text-4xl">
-          Respuestas al alcance real del producto.
+          Preguntas claras. Respuestas concretas.
         </h2>
         <Accordion type="single" collapsible className="mt-8" defaultValue="item-0">
           {items.map((item, index) => (
             <AccordionItem key={item.question} value={`item-${index}`}>
-              <AccordionTrigger className="py-4 text-left text-base min-h-11">
+              <AccordionTrigger className="font-heading py-4 text-left text-base min-h-11">
                 {item.question}
               </AccordionTrigger>
               <AccordionContent className="text-[#5b6b82] leading-6">

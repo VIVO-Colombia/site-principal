@@ -1,10 +1,9 @@
 export const brand = {
   name: process.env.NEXT_PUBLIC_PRODUCT_NAME?.trim() || "Planeador",
-  tagline: "Tu dinero, más claro cada día.",
+  tagline: "Ve cuánto te queda. Antes de gastarlo.",
   description:
-    "Organiza tus ingresos, controla tus gastos y anticipa tus pagos desde un solo lugar. Planea mejor cada mes, sin depender de hojas de cálculo.",
-  shortDescription:
-    "Organiza ingresos, gastos, presupuestos y pagos desde un solo lugar.",
+    "Ingresos, gastos, presupuesto y pagos en un solo ciclo. Tú eliges las fechas. El sistema te dice qué puedes gastar hoy.",
+  shortDescription: "Organiza ingresos, gastos y pagos. Sabe cuánto te queda, en un solo lugar.",
 } as const
 
 export const site = {

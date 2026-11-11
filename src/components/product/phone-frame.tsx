@@ -12,8 +12,8 @@ export function PhoneFrame({
   return (
     <div
       className={cn(
-        "relative mx-auto w-[272px] rounded-[36px] bg-[#1b283c] p-[9px] shadow-[0_30px_60px_-28px_rgb(23_36_60_/_0.55)]",
-        compact && "w-[240px] rounded-[32px] p-[8px]",
+        "relative mx-auto w-[min(100%,272px)] rounded-[36px] bg-[#1b283c] p-[9px] shadow-[0_30px_60px_-28px_rgb(23_36_60_/_0.55)]",
+        compact && "w-[min(100%,240px)] rounded-[32px] p-[8px]",
         className
       )}
     >

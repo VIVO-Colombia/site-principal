@@ -46,7 +46,7 @@ export function Logo({
       {showWordmark ? (
         <span
           className={cn(
-            "text-[17px] font-semibold tracking-[-0.03em] text-foreground",
+            "font-heading text-[17px] font-semibold tracking-[-0.03em] text-foreground",
             inverted && "text-white"
           )}
         >

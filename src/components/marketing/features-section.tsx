@@ -10,57 +10,53 @@ import { Badge } from "@/components/ui/badge"
 
 const features = [
   {
-    title: "Presupuestos mensuales",
-    body: "Planea cuánto quieres gastar y conoce cuánto has utilizado.",
+    title: "Presupuesto por ciclo",
+    body: "Defines el periodo. Ves cuánto planeaste y cuánto ya salió, categoría por categoría.",
     visual: <BudgetMini />,
     wide: true,
-    status: "Próximamente",
   },
   {
     title: "Movimientos",
-    body: "Registra ingresos y gastos de forma rápida.",
+    body: "Ingresos, gastos y transferencias con fecha, valor, cuenta y categoría.",
     visual: <MovementsMini />,
-    status: "Próximamente",
   },
   {
-    title: "Pagos y recordatorios",
-    body: "Mantén a la vista tus compromisos y fechas de vencimiento.",
+    title: "Pagos programados",
+    body: "Arriendo, servicios y deudas con vencimiento. El dinero se mueve cuando registras el pago.",
     visual: <PaymentsMini />,
-    status: "Próximamente",
   },
   {
     title: "Cuentas y saldos",
-    body: "Organiza tu dinero en diferentes cuentas.",
+    body: "Efectivo, banco o billetera. El saldo sale del historial, no de una celda suelta.",
     visual: <AccountsMini />,
-    status: "Próximamente",
   },
   {
     title: "Ahorros y deudas",
-    body: "Da seguimiento a tus metas y obligaciones.",
+    body: "Metas y obligaciones con seguimiento propio.",
     visual: <GoalsMini />,
-    status: "Próximamente",
+    status: "Siguiente etapa",
   },
   {
-    title: "Análisis financiero",
-    body: "Comprende cómo evoluciona tu dinero.",
+    title: "Análisis",
+    body: "Evolución de tu dinero entre ciclos, cuando el núcleo esté rodando contigo.",
     visual: <AnalysisMini />,
     wide: true,
-    status: "Próximamente",
+    status: "Siguiente etapa",
   },
 ]
 
 export function FeaturesSection() {
   return (
-    <section id="funcionalidades" className="scroll-mt-24 px-4 py-20 sm:px-6">
+    <section id="funcionalidades" className="scroll-mt-24 px-4 py-16 sm:px-6 sm:py-20">
       <div className="mx-auto max-w-6xl">
         <div className="max-w-2xl">
-          <p className="text-sm font-medium text-primary">Funcionalidades</p>
+          <p className="text-sm font-medium text-primary">El producto</p>
           <h2 className="mt-3 text-3xl font-semibold tracking-tight sm:text-4xl">
-            Todo lo que usabas en la hoja de cálculo, en un solo lugar.
+            Un ciclo. Todas las cuentas. Cero hojas.
           </h2>
           <p className="mt-3 text-[#5b6b82]">
-            El módulo financiero se construye sobre las reglas del planeador original. En esta
-            primera versión pública estas pantallas todavía no están operativas.
+            Planea, registra y mira qué ya se gastó. Sin fórmulas que se rompen y sin esperar al
+            cierre del mes calendario.
           </p>
         </div>
         <div className="mt-10 grid gap-4 md:grid-cols-2">
@@ -73,9 +69,11 @@ export function FeaturesSection() {
             >
               <div className="flex items-start justify-between gap-3">
                 <h3 className="text-lg font-semibold tracking-tight">{feature.title}</h3>
-                <Badge variant="secondary" className="h-6 bg-[#eef2f7] text-[#5b6b82]">
-                  {feature.status}
-                </Badge>
+                {feature.status ? (
+                  <Badge variant="secondary" className="h-6 bg-[#eef2f7] text-[#5b6b82]">
+                    {feature.status}
+                  </Badge>
+                ) : null}
               </div>
               <p className="mt-2 max-w-md text-sm leading-6 text-[#5b6b82]">{feature.body}</p>
               <div className="mt-5">{feature.visual}</div>

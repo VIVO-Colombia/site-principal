@@ -52,7 +52,7 @@ export function SiteHeader({ inverted = false }: { inverted?: boolean }) {
           >
             Iniciar sesión
           </Link>
-          <CtaLink href={publicRoutes.register}>Comenzar</CtaLink>
+          <CtaLink href={publicRoutes.register}>Crear cuenta</CtaLink>
         </div>
 
         <Sheet open={open} onOpenChange={setOpen}>
@@ -92,7 +92,7 @@ export function SiteHeader({ inverted = false }: { inverted?: boolean }) {
               </Link>
               <div className="px-3 pt-3">
                 <CtaLink href={publicRoutes.register} className="w-full">
-                  Comenzar
+                  Crear cuenta
                 </CtaLink>
               </div>
             </nav>

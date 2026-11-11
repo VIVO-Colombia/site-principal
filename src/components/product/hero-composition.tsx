@@ -5,8 +5,8 @@ import { PhoneFrame } from "@/components/product/phone-frame"
 
 export function HeroComposition() {
   return (
-    <div className="relative mx-auto w-full">
-      <div className="pointer-events-none absolute inset-0 hero-grid" />
+    <div className="relative mx-auto w-full min-w-0">
+      <div className="pointer-events-none absolute inset-0 hero-grid max-lg:opacity-50" />
 
       <div className="relative hidden h-[640px] overflow-hidden lg:block">
         <div className="absolute top-4 right-2 origin-top-right scale-[0.82] rotate-[5deg]">
@@ -25,13 +25,15 @@ export function HeroComposition() {
         </div>
       </div>
 
-      <div className="relative flex flex-col items-center lg:hidden">
-        <PhoneFrame>
+      <div className="relative mx-auto w-[min(100%,16.5rem)] pt-1 lg:hidden">
+        <PhoneFrame compact className="w-full max-w-none shadow-[0_24px_50px_-28px_rgb(23_36_60_/_0.5)]">
           <MobileAppPreview />
         </PhoneFrame>
-        <div className="mt-5 grid w-full grid-cols-1 justify-items-center gap-3 sm:grid-cols-2">
-          <BalanceCard />
-          <UpcomingPaymentCard />
+        <div className="pointer-events-none absolute top-[32%] left-0 z-20 w-[9.75rem]">
+          <BalanceCard compact />
+        </div>
+        <div className="pointer-events-none absolute top-[46%] right-0 z-20 w-[9.9rem]">
+          <UpcomingPaymentCard compact />
         </div>
       </div>
     </div>
