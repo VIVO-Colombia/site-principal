@@ -4,7 +4,7 @@ import { formatCop } from "@/lib/format"
 
 export function DesktopDashboardPreview() {
   return (
-    <div className="flex h-full min-h-[28rem] w-full flex-col overflow-hidden rounded-[22px] bg-white shadow-[0_28px_70px_-36px_rgb(23_36_60_/_0.5)] ring-1 ring-[#e5eaf1]">
+    <div className="flex w-full flex-col overflow-hidden rounded-[22px] bg-white shadow-[0_28px_70px_-36px_rgb(23_36_60_/_0.5)] ring-1 ring-[#e5eaf1]">
       <div className="flex items-center gap-3 border-b border-[#e5eaf1] bg-[#f7f9fc] px-4 py-2.5">
         <div className="flex gap-1.5" aria-hidden>
           <span className="size-2.5 rounded-full bg-[#d7dee8]" />
@@ -17,7 +17,7 @@ export function DesktopDashboardPreview() {
         <DemoBadge className="ml-auto shrink-0" />
       </div>
 
-      <div className="flex flex-1 flex-col gap-4 p-4">
+      <div className="flex flex-col gap-4 p-4">
         <div className="rounded-[20px] bg-[#17243c] px-4 py-4 text-white">
           <p className="text-[11px] text-white/65">Disponible para gastar</p>
           <p className="mt-1 text-[1.7rem] leading-none font-semibold tracking-tight money">
@@ -50,7 +50,7 @@ export function DesktopDashboardPreview() {
           ))}
         </div>
 
-        <div className="flex flex-1 flex-col">
+        <div>
           <p className="mb-2 text-[11px] font-medium text-[#5b6b82]">Últimos movimientos</p>
           <div className="space-y-2">
             {demoFinance.movements.slice(0, 3).map((item) => (
@@ -73,7 +73,7 @@ export function DesktopDashboardPreview() {
               </div>
             ))}
           </div>
-          <div className="mt-auto rounded-xl bg-[#fef2f2] px-3 py-2.5">
+          <div className="mt-3 rounded-xl bg-[#fef2f2] px-3 py-2.5">
             <p className="text-[11px] font-medium text-[#dc2626]">Próximo pago</p>
             <div className="mt-0.5 flex items-baseline justify-between gap-2">
               <p className="text-[13px] font-medium">
