@@ -9,21 +9,11 @@ import {
   type SubscriptionStatus,
 } from "@/lib/auth/roles"
 import { getAccessContext } from "@/lib/auth/session"
+import { effectiveSubscriptionStatus } from "@/lib/billing/status"
 import type { AccessContext } from "@/types/database"
 
-function currentStatus(context: AccessContext): SubscriptionStatus | null {
-  const subscription = context.subscription
-  if (!subscription) return null
-
-  if (
-    (subscription.status === "active" || subscription.status === "trialing") &&
-    subscription.ends_at &&
-    new Date(subscription.ends_at) < new Date()
-  ) {
-    return "expired"
-  }
-
-  return subscription.status
+export function currentStatus(context: AccessContext): SubscriptionStatus | null {
+  return effectiveSubscriptionStatus(context.subscription)
 }
 
 export function resolvePostAuthPath(context: AccessContext) {
@@ -33,6 +23,14 @@ export function resolvePostAuthPath(context: AccessContext) {
 
   if (!context.user) {
     return publicRoutes.login
+  }
+
+  if (!context.user.emailConfirmed) {
+    return `${publicRoutes.activate}?estado=correo`
+  }
+
+  if (context.profile?.account_status === "suspended") {
+    return `${publicRoutes.activate}?estado=suspendida`
   }
 
   if (isSuperAdminRole(context.profile?.role)) {
@@ -69,6 +67,14 @@ export async function requireUser() {
 export async function requireAppAccess() {
   const context = await requireUser()
 
+  if (!context.user?.emailConfirmed) {
+    redirect(`${publicRoutes.activate}?estado=correo`)
+  }
+
+  if (context.profile?.account_status === "suspended") {
+    redirect(`${publicRoutes.activate}?estado=suspendida`)
+  }
+
   if (isSuperAdminRole(context.profile?.role)) {
     return { ...context, readOnly: false, status: currentStatus(context) }
   }
@@ -89,9 +95,21 @@ export async function requireAppAccess() {
 export async function requireAdminAccess() {
   const context = await requireUser()
 
+  if (context.profile?.account_status === "suspended") {
+    redirect(`${publicRoutes.activate}?estado=suspendida`)
+  }
+
   if (!isSuperAdminRole(context.profile?.role)) {
     redirect("/app")
   }
 
   return context
+}
+
+export async function requireWritableAppAccess() {
+  const access = await requireAppAccess()
+  if (access.readOnly) {
+    throw new Error("Tu suscripción vencida permite consultar, pero no crear ni modificar registros.")
+  }
+  return access
 }

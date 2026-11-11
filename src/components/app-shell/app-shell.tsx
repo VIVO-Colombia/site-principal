@@ -23,6 +23,8 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet"
+import { CycleSwitcher } from "@/components/finance/cycle-switcher"
+import type { FinancialCycle } from "@/types/database"
 import { cn } from "cn"
 
 const icons = {
@@ -35,10 +37,16 @@ export function AppShell({
   children,
   userName,
   readOnly,
+  cycles = [],
+  activeCycle,
+  unreadNotifications = 0,
 }: {
   children: React.ReactNode
   userName?: string | null
   readOnly?: boolean
+  cycles?: Pick<FinancialCycle, "id" | "name">[]
+  activeCycle?: Pick<FinancialCycle, "id" | "name"> | null
+  unreadNotifications?: number
 }) {
   const pathname = usePathname()
 
@@ -83,15 +91,18 @@ export function AppShell({
         <header className="sticky top-0 z-40 flex h-14 items-center justify-between border-b border-[#e5eaf1] bg-white/90 px-4 backdrop-blur-md lg:h-16 lg:px-6">
           <div>
             <p className="text-sm font-semibold">{titleFromPath(pathname)}</p>
-            <p className="text-[11px] text-[#5b6b82]">Ciclo por configurar</p>
+            <CycleSwitcher cycles={cycles} activeId={activeCycle?.id} readOnly={readOnly} />
           </div>
           <div className="flex items-center gap-1">
             <Link
               href={appRoutes.notifications}
-              className="grid size-11 place-items-center rounded-full hover:bg-[#eef2f7]"
+              className="relative grid size-11 place-items-center rounded-full hover:bg-[#eef2f7]"
               aria-label="Notificaciones"
             >
               <Bell className="size-5" />
+              {unreadNotifications > 0 ? (
+                <span className="absolute top-2 right-2 size-2 rounded-full bg-primary" />
+              ) : null}
             </Link>
             <Link
               href={appRoutes.settings}
@@ -134,7 +145,7 @@ export function AppShell({
           <MoreMenu pathname={pathname} />
         </div>
         <Link
-          href={appRoutes.movements}
+          href={`${appRoutes.movements}?nuevo=1`}
           className="absolute -top-6 left-1/2 grid size-12 -translate-x-1/2 place-items-center rounded-full bg-primary text-white shadow-[0_10px_20px_rgb(37_99_235_/_0.28)]"
           aria-label="Registrar movimiento"
         >

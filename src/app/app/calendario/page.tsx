@@ -1,10 +1,13 @@
-import { ComingSoon } from "@/components/app-shell/coming-soon"
+import { EmptyState } from "@/components/shared/empty-state"
+import { requireAppAccess } from "@/lib/auth/access"
 
-export default function Page() {
+export default async function Page() {
+  await requireAppAccess()
   return (
-    <ComingSoon
+    <EmptyState
       title="Calendario"
-      description="El calendario de vencimientos depende del sistema de pagos programados, todavía no activo."
+      description="Los vencimientos ya se listan en Pagos y en el inicio. La vista de calendario se activará cuando esa capa esté lista."
+      action={{ href: "/app/pagos", label: "Ver pagos programados" }}
     />
   )
 }

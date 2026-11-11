@@ -1,10 +1,13 @@
-import { ComingSoon } from "@/components/app-shell/coming-soon"
+import { EmptyState } from "@/components/shared/empty-state"
+import { requireAppAccess } from "@/lib/auth/access"
 
-export default function Page() {
+export default async function Page() {
+  await requireAppAccess()
   return (
-    <ComingSoon
+    <EmptyState
       title="Deudas"
-      description="El seguimiento de obligaciones se habilitará junto con las calculadoras del archivo original."
+      description="Ya puedes registrar un pago de deuda como movimiento. El módulo de cuotas y calendarios de crédito se añadirá después."
+      action={{ href: "/app/movimientos?nuevo=1&tipo=debt_payment", label: "Registrar pago de deuda" }}
     />
   )
 }

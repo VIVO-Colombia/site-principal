@@ -1,5 +1,13 @@
 import { z } from "zod"
 
+import { passwordPolicy } from "@/config/security"
+
+const passwordSchema = z
+  .string()
+  .min(passwordPolicy.minLength, `Usa al menos ${passwordPolicy.minLength} caracteres`)
+  .regex(/[A-Za-z]/, "Incluye al menos una letra")
+  .regex(/[0-9]/, "Incluye al menos un número")
+
 export const loginSchema = z.object({
   email: z.email("Ingresa un correo válido"),
   password: z.string().min(8, "La contraseña debe tener al menos 8 caracteres"),
@@ -15,15 +23,12 @@ export const registerSchema = z
       .min(2, "Ingresa tu nombre")
       .max(80, "El nombre es demasiado largo"),
     email: z.email("Ingresa un correo válido"),
-    password: z
-      .string()
-      .min(8, "Usa al menos 8 caracteres")
-      .regex(/[A-Za-z]/, "Incluye al menos una letra")
-      .regex(/[0-9]/, "Incluye al menos un número"),
+    password: passwordSchema,
     confirmPassword: z.string(),
-    terms: z
+    terms: z.boolean().refine((value) => value === true, "Debes aceptar los términos y condiciones"),
+    privacy: z
       .boolean()
-      .refine((value) => value === true, "Debes aceptar los términos y el tratamiento de datos"),
+      .refine((value) => value === true, "Debes autorizar el tratamiento de datos"),
     turnstileToken: z.string().optional(),
   })
   .refine((data) => data.password === data.confirmPassword, {
@@ -38,11 +43,7 @@ export const recoverSchema = z.object({
 
 export const updatePasswordSchema = z
   .object({
-    password: z
-      .string()
-      .min(8, "Usa al menos 8 caracteres")
-      .regex(/[A-Za-z]/, "Incluye al menos una letra")
-      .regex(/[0-9]/, "Incluye al menos un número"),
+    password: passwordSchema,
     confirmPassword: z.string(),
   })
   .refine((data) => data.password === data.confirmPassword, {
