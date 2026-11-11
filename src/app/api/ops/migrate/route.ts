@@ -1,9 +1,8 @@
 import { readFileSync } from "node:fs"
 import { join } from "node:path"
 
+import { connection } from "next/server"
 import postgres from "postgres"
-
-export const runtime = "nodejs"
 
 const OWNER_EMAIL = "valentinalunaolave@gmail.com"
 const FILES = [
@@ -26,6 +25,7 @@ function loadSql(file: string) {
 }
 
 export async function GET(request: Request) {
+  await connection()
   if (!authorized(request)) {
     return Response.json({ error: "not found" }, { status: 404 })
   }
