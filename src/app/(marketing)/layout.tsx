@@ -1,5 +1,5 @@
-import { SiteFooter } from "@/components/marketing/site-footer"
-import { SiteHeader } from "@/components/marketing/site-header"
+import { CorporateFooter } from "@/components/corporate/corporate-footer"
+import { CorporateHeader } from "@/components/corporate/corporate-header"
 
 export default function MarketingLayout({
   children,
@@ -7,12 +7,12 @@ export default function MarketingLayout({
   children: React.ReactNode
 }) {
   return (
-    <div className="marketing-scope flex flex-1 flex-col">
-      <SiteHeader />
+    <div className="flex flex-1 flex-col">
+      <CorporateHeader />
       <div id="contenido" className="flex-1">
         {children}
       </div>
-      <SiteFooter />
+      <CorporateFooter />
     </div>
   )
 }

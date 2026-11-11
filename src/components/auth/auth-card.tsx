@@ -16,7 +16,7 @@ export function AuthCard({
 }) {
   return (
     <div className="flex min-h-full flex-1 flex-col items-center justify-center px-4 py-10">
-      <Link href={publicRoutes.home} className="mb-8">
+      <Link href={publicRoutes.planner} className="mb-8">
         <Logo />
       </Link>
       <div className="w-full max-w-[400px] rounded-[28px] bg-white p-6 shadow-[0_16px_40px_-28px_rgb(23_36_60_/_0.35)] ring-1 ring-[#e5eaf1] sm:p-8">

@@ -1,6 +1,6 @@
-# VIVO Planner
+# VIVO Colombia
 
-Plataforma web de finanzas personales. El nombre se centraliza en `src/config/brand.ts` (`NEXT_PUBLIC_PRODUCT_NAME` puede sobreescribirlo).
+Sitio del grupo empresarial VIVO. Reúne las landings corporativas y la aplicación de planeación financiera **VIVO Planner**. El nombre del planeador se centraliza en `src/config/brand.ts` (`NEXT_PUBLIC_PRODUCT_NAME` puede sobreescribirlo).
 
 ## Requisitos
 
@@ -18,7 +18,7 @@ npm run dev
 
 Abre [http://localhost:3000](http://localhost:3000).
 
-Sin claves de Supabase la landing se puede revisar. `/app` y `/admin` redirigen a `/acceso`.
+Sin claves de Supabase las páginas públicas se pueden revisar. `/app` y `/admin` redirigen a `/acceso`.
 
 Aplica las migraciones de `supabase/migrations` en el SQL Editor (ver `supabase/README.md`) antes de probar registro, Super Admin o finanzas.
 
@@ -66,7 +66,10 @@ El registro público solo crea el rol `user`. El primer Super Admin se asigna co
 
 ### Público
 
-- `/` landing comercial
+- `/` VIVO | Grupo Empresarial
+- `/transporte` VIVO Transporte
+- `/software` VIVO Software
+- `/planner` VIVO Planner
 - `/planes`
 - `/acceso`
 - `/registro`

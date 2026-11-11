@@ -1,5 +1,8 @@
 export const publicRoutes = {
   home: "/",
+  transport: "/transporte",
+  software: "/software",
+  planner: "/planner",
   plans: "/planes",
   login: "/acceso",
   register: "/registro",
@@ -40,12 +43,15 @@ export const adminRoutes = {
 } as const
 
 export const marketingAnchors = {
-  features: "/#funcionalidades",
-  howItWorks: "/#como-funciona",
-  faq: "/#preguntas-frecuentes",
-  privacy: "/#privacidad",
-  mobile: "/#celular",
-  control: "/#control",
+  features: "/planner#funcionalidades",
+  howItWorks: "/planner#como-funciona",
+  faq: "/planner#preguntas-frecuentes",
+  privacy: "/planner#privacidad",
+  mobile: "/planner#celular",
+  control: "/planner#control",
+  ecosystem: "/#ecosistema",
+  about: "/#vivo",
+  brand: "/#marca",
 } as const
 
 export function isAppPath(pathname: string) {
@@ -61,5 +67,13 @@ export function isAuthPath(pathname: string) {
     pathname === publicRoutes.login ||
     pathname === publicRoutes.register ||
     pathname === publicRoutes.recoverPassword
+  )
+}
+
+export function isPlannerMarketingPath(pathname: string) {
+  return (
+    pathname === publicRoutes.planner ||
+    pathname.startsWith(`${publicRoutes.planner}/`) ||
+    pathname === publicRoutes.plans
   )
 }

@@ -1,5 +1,12 @@
 import { adminRoutes, appRoutes, marketingAnchors, publicRoutes } from "@/config/routes"
 
+export const corporateNav = [
+  { href: publicRoutes.home, label: "Grupo", id: "grupo" },
+  { href: publicRoutes.transport, label: "Transporte", id: "transporte" },
+  { href: publicRoutes.software, label: "Software", id: "software" },
+  { href: publicRoutes.planner, label: "Planner", id: "planner" },
+] as const
+
 export const marketingNav = [
   { href: marketingAnchors.features, label: "Funcionalidades" },
   { href: marketingAnchors.howItWorks, label: "Cómo funciona" },
@@ -8,8 +15,13 @@ export const marketingNav = [
 ] as const
 
 export const footerNav = {
-  product: [
-    { href: publicRoutes.home, label: "Inicio" },
+  solutions: [
+    { href: publicRoutes.home, label: "Grupo empresarial" },
+    { href: publicRoutes.transport, label: "VIVO Transporte" },
+    { href: publicRoutes.software, label: "VIVO Software" },
+    { href: publicRoutes.planner, label: "VIVO Planner" },
+  ],
+  planner: [
     { href: marketingAnchors.features, label: "Funcionalidades" },
     { href: publicRoutes.plans, label: "Planes" },
     { href: publicRoutes.login, label: "Acceso" },
@@ -64,3 +76,17 @@ export const adminNav = [
   { href: adminRoutes.audit, label: "Auditoría" },
   { href: adminRoutes.settings, label: "Configuración" },
 ] as const
+
+export function isCorporateNavActive(id: string, pathname: string) {
+  if (id === "grupo") return pathname === publicRoutes.home
+  if (id === "transporte") return pathname.startsWith(publicRoutes.transport)
+  if (id === "software") return pathname.startsWith(publicRoutes.software)
+  if (id === "planner") {
+    return (
+      pathname === publicRoutes.planner ||
+      pathname.startsWith(`${publicRoutes.planner}/`) ||
+      pathname === publicRoutes.plans
+    )
+  }
+  return false
+}

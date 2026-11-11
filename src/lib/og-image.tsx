@@ -3,13 +3,18 @@ import { join } from "node:path"
 
 import { ImageResponse } from "next/og"
 
-import { brand, productName } from "@/config/brand"
+export const ogSize = { width: 1200, height: 630 }
+export const ogContentType = "image/png"
 
-export const alt = `${productName()} · ${brand.tagline}`
-export const size = { width: 1200, height: 630 }
-export const contentType = "image/png"
-
-export default async function OpenGraphImage() {
+export async function vivoOgImage({
+  kicker = "VIVO",
+  title,
+  description,
+}: {
+  kicker?: string
+  title: string
+  description: string
+}) {
   const mark = await readFile(join(process.cwd(), "public/brand/vivo-mark.png"))
 
   return new ImageResponse(
@@ -18,7 +23,7 @@ export default async function OpenGraphImage() {
         style={{
           width: "100%",
           height: "100%",
-          background: "#F7F9FC",
+          background: "#F6F8FC",
           display: "flex",
           flexDirection: "column",
           justifyContent: "center",
@@ -30,36 +35,38 @@ export default async function OpenGraphImage() {
             display: "flex",
             alignItems: "center",
             gap: 16,
-            color: "#17243C",
-            fontSize: 28,
+            color: "#102A56",
+            fontSize: 26,
             fontWeight: 600,
           }}
         >
+          {/* OG images run in Satori, which does not use next/image. */}
+          {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={`data:image/png;base64,${mark.toString("base64")}`}
             width={56}
             height={56}
             alt=""
           />
-          {productName()}
+          {kicker}
         </div>
         <div
           style={{
             marginTop: 36,
-            fontSize: 64,
-            lineHeight: 1.1,
+            fontSize: 58,
+            lineHeight: 1.08,
             fontWeight: 650,
-            color: "#17243C",
-            maxWidth: 900,
+            color: "#142238",
+            maxWidth: 960,
           }}
         >
-          {brand.tagline}
+          {title}
         </div>
-        <div style={{ marginTop: 24, fontSize: 28, color: "#5B6B82", maxWidth: 760 }}>
-          {brand.shortDescription}
+        <div style={{ marginTop: 24, fontSize: 26, color: "#5B6B82", maxWidth: 820 }}>
+          {description}
         </div>
       </div>
     ),
-    size
+    ogSize
   )
 }
