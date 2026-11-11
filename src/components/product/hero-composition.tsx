@@ -8,15 +8,8 @@ export function HeroComposition() {
     <div className="relative mx-auto w-full min-w-0">
       <div className="pointer-events-none absolute inset-0 hero-grid max-lg:opacity-50" />
 
-      <div className="relative hidden items-stretch gap-4 lg:flex">
-        <div className="min-w-0 flex-1">
-          <DesktopDashboardPreview />
-        </div>
-        <div className="relative z-10 w-[15.5rem] shrink-0">
-          <PhoneFrame compact className="w-full max-w-none">
-            <MobileAppPreview />
-          </PhoneFrame>
-        </div>
+      <div className="relative hidden lg:block">
+        <DesktopDashboardPreview />
       </div>
 
       <div className="relative mx-auto w-[min(100%,16.5rem)] pt-1 lg:hidden">
