@@ -6,6 +6,9 @@ import { publicRoutes } from "@/config/routes"
 export default function sitemap(): MetadataRoute.Sitemap {
   const paths = [
     publicRoutes.home,
+    publicRoutes.transport,
+    publicRoutes.software,
+    publicRoutes.planner,
     publicRoutes.plans,
     publicRoutes.login,
     publicRoutes.register,
@@ -15,8 +18,15 @@ export default function sitemap(): MetadataRoute.Sitemap {
   ]
 
   return paths.map((path) => ({
-    url: `${site.url}${path}`,
-    changeFrequency: "weekly",
-    priority: path === "/" ? 1 : 0.6,
+    url: path === "/" ? site.url : `${site.url}${path}`,
+    changeFrequency: "weekly" as const,
+    priority:
+      path === publicRoutes.home
+        ? 1
+        : path === publicRoutes.transport ||
+            path === publicRoutes.software ||
+            path === publicRoutes.planner
+          ? 0.8
+          : 0.6,
   }))
 }

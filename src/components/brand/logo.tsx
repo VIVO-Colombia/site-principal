@@ -10,6 +10,7 @@ type LogoProps = {
   showWordmark?: boolean
   inverted?: boolean
   priority?: boolean
+  label?: string
 }
 
 export function Logo({
@@ -18,8 +19,9 @@ export function Logo({
   showWordmark = true,
   inverted = false,
   priority = false,
+  label,
 }: LogoProps) {
-  const name = productName()
+  const name = label ?? productName()
 
   return (
     <span className={cn("inline-flex items-center gap-2.5", className)}>

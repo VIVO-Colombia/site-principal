@@ -6,6 +6,17 @@ export const brand = {
   shortDescription: "Organiza ingresos, gastos y pagos. Sabe cuánto te queda, en un solo lugar.",
 } as const
 
+export const group = {
+  name: "VIVO",
+  legalName: "VIVO Colombia",
+  title: "VIVO Colombia | Grupo Empresarial",
+  tagline: "Diferentes caminos. Un mismo propósito.",
+  description:
+    "Conectamos soluciones de transporte, tecnología y planeación financiera para hacer más sencillo lo que realmente importa.",
+  shortDescription:
+    "Grupo empresarial colombiano con soluciones de transporte, software y planeación financiera.",
+} as const
+
 export const site = {
   get url() {
     return process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"
@@ -16,4 +27,8 @@ export const site = {
 
 export function productName() {
   return brand.name
+}
+
+export function groupName() {
+  return group.name
 }

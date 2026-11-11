@@ -2,7 +2,7 @@ import type { Metadata, Viewport } from "next"
 
 import { Providers } from "@/components/providers"
 import { SkipLink } from "@/components/skip-link"
-import { brand, productName, site } from "@/config/brand"
+import { group, site } from "@/config/brand"
 import { fhGiselle, geistMono, geistSans } from "@/lib/fonts"
 
 import "./globals.css"
@@ -10,21 +10,22 @@ import "./globals.css"
 export const metadata: Metadata = {
   metadataBase: new URL(site.url),
   title: {
-    default: `${productName()} · ${brand.tagline}`,
-    template: `%s · ${productName()}`,
+    default: group.title,
+    template: `%s · ${group.name}`,
   },
-  description: brand.description,
-  applicationName: productName(),
+  description: group.description,
+  applicationName: group.legalName,
   openGraph: {
-    title: `${productName()} · ${brand.tagline}`,
-    description: brand.shortDescription,
+    title: group.title,
+    description: group.shortDescription,
     locale: site.locale,
     type: "website",
+    siteName: group.legalName,
   },
   twitter: {
     card: "summary_large_image",
-    title: `${productName()} · ${brand.tagline}`,
-    description: brand.shortDescription,
+    title: group.title,
+    description: group.shortDescription,
   },
   robots: {
     index: true,

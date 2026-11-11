@@ -14,7 +14,7 @@ export const metadata: Metadata = {
 
 export default function PlansPage() {
   return (
-    <div className="pt-6">
+    <div className="marketing-scope pt-6">
       <Suspense fallback={<PlansSection compact />}>
         <PublishedPlans />
       </Suspense>
