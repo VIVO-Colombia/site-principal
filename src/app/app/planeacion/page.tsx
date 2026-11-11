@@ -21,7 +21,7 @@ export default async function PlanningPage() {
     )
   }
 
-  const rows = computeBudgetRows(data.categories, data.budgets, data.transactions, data.scheduledPayments)
+  const rows = computeBudgetRows(data.categories, data.budgets, data.cycleTransactions, data.scheduledPayments)
 
   return (
     <div className="mx-auto grid max-w-4xl gap-4">

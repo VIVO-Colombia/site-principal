@@ -5,6 +5,7 @@ import { cookies } from "next/headers"
 
 import { requireWritableAppAccess } from "@/lib/auth/access"
 import { actionError, type ActionResult } from "@/lib/action-result"
+import { shiftDueOn } from "@/lib/finance/cycle-dates"
 import { parseAmountInput, toAmount } from "@/lib/finance/money"
 import { CYCLE_COOKIE } from "@/lib/finance/queries"
 import { requireSupabase } from "@/lib/supabase/require"
@@ -23,6 +24,19 @@ function refreshFinance() {
   revalidatePath("/app/planeacion")
   revalidatePath("/app/cuentas")
   revalidatePath("/app/pagos")
+}
+
+async function requireOwnedId(
+  table: "financial_cycles" | "financial_accounts" | "financial_categories" | "scheduled_payments",
+  id: string,
+  userId: string
+) {
+  const supabase = await requireSupabase()
+  const { data, error } = await supabase.from(table).select("id").eq("id", id).eq("user_id", userId).maybeSingle()
+  if (error) throw new Error(error.message)
+  if (!data) {
+    throw new Error("El registro no pertenece a tu cuenta.")
+  }
 }
 
 export async function setActiveCycleAction(cycleId: string): Promise<ActionResult> {
@@ -48,6 +62,21 @@ export async function createCycleAction(input: unknown): Promise<ActionResult> {
     const supabase = await requireSupabase()
     const userId = access.user!.id
 
+    let sourceCycle: { id: string; starts_on: string; ends_on: string } | null = null
+    if (parsed.data.duplicateFromId) {
+      const source = await supabase
+        .from("financial_cycles")
+        .select("id, starts_on, ends_on")
+        .eq("user_id", userId)
+        .eq("id", parsed.data.duplicateFromId)
+        .maybeSingle()
+      if (source.error) return { error: source.error.message }
+      if (!source.data) {
+        return { error: "El ciclo a duplicar no existe o no te pertenece." }
+      }
+      sourceCycle = source.data
+    }
+
     const { data, error } = await supabase
       .from("financial_cycles")
       .insert({
@@ -70,18 +99,18 @@ export async function createCycleAction(input: unknown): Promise<ActionResult> {
 
     await supabase.rpc("seed_default_categories", { p_user_id: userId })
 
-    if (parsed.data.duplicateFromId) {
+    if (sourceCycle) {
       const [{ data: budgets }, { data: payments }] = await Promise.all([
         supabase
           .from("financial_budgets")
           .select("category_id, planned_amount")
           .eq("user_id", userId)
-          .eq("cycle_id", parsed.data.duplicateFromId),
+          .eq("cycle_id", sourceCycle.id),
         supabase
           .from("scheduled_payments")
           .select("category_id, preferred_account_id, name, expected_amount, due_on, notes")
           .eq("user_id", userId)
-          .eq("cycle_id", parsed.data.duplicateFromId),
+          .eq("cycle_id", sourceCycle.id),
       ])
 
       if (budgets?.length) {
@@ -104,7 +133,12 @@ export async function createCycleAction(input: unknown): Promise<ActionResult> {
             preferred_account_id: row.preferred_account_id,
             name: row.name,
             expected_amount: row.expected_amount,
-            due_on: row.due_on,
+            due_on: shiftDueOn({
+              dueOn: row.due_on,
+              sourceStartsOn: sourceCycle.starts_on,
+              targetStartsOn: parsed.data.startsOn,
+              targetEndsOn: parsed.data.endsOn,
+            }),
             notes: row.notes,
             paid_amount: 0,
             status: "pending",
@@ -290,6 +324,10 @@ export async function saveBudgetAction(input: unknown): Promise<ActionResult> {
     if (!parsed.success) return { error: parsed.error.issues[0]?.message }
     const supabase = await requireSupabase()
     const planned = parsed.data.plannedAmount ? toAmount(parsed.data.plannedAmount.replace(",", ".")) : 0
+    await Promise.all([
+      requireOwnedId("financial_cycles", parsed.data.cycleId, access.user!.id),
+      requireOwnedId("financial_categories", parsed.data.categoryId, access.user!.id),
+    ])
 
     const { error } = await supabase.from("financial_budgets").upsert(
       {
@@ -323,6 +361,20 @@ export async function saveTransactionAction(input: unknown): Promise<ActionResul
     }
 
     const supabase = await requireSupabase()
+    await Promise.all([
+      requireOwnedId("financial_cycles", parsed.data.cycleId, access.user!.id),
+      requireOwnedId("financial_accounts", parsed.data.accountId, access.user!.id),
+      parsed.data.counterpartyAccountId
+        ? requireOwnedId("financial_accounts", parsed.data.counterpartyAccountId, access.user!.id)
+        : Promise.resolve(),
+      parsed.data.categoryId
+        ? requireOwnedId("financial_categories", parsed.data.categoryId, access.user!.id)
+        : Promise.resolve(),
+      parsed.data.scheduledPaymentId
+        ? requireOwnedId("scheduled_payments", parsed.data.scheduledPaymentId, access.user!.id)
+        : Promise.resolve(),
+    ])
+
     const payload = {
       user_id: access.user!.id,
       cycle_id: parsed.data.cycleId,
@@ -383,6 +435,15 @@ export async function upsertScheduledPaymentAction(input: unknown): Promise<Acti
     if (!parsed.success) return { error: parsed.error.issues[0]?.message }
     const expected = parseAmountInput(parsed.data.expectedAmount)
     const supabase = await requireSupabase()
+    await Promise.all([
+      requireOwnedId("financial_cycles", parsed.data.cycleId, access.user!.id),
+      parsed.data.categoryId
+        ? requireOwnedId("financial_categories", parsed.data.categoryId, access.user!.id)
+        : Promise.resolve(),
+      parsed.data.preferredAccountId
+        ? requireOwnedId("financial_accounts", parsed.data.preferredAccountId, access.user!.id)
+        : Promise.resolve(),
+    ])
 
     const payload = {
       user_id: access.user!.id,
@@ -426,15 +487,31 @@ export async function recordScheduledPaymentAction(input: {
   occurredOn: string
   cycleId: string
 }): Promise<ActionResult> {
-  return saveTransactionAction({
-    kind: "expense",
-    amount: input.amount,
-    occurredOn: input.occurredOn,
-    accountId: input.accountId,
-    cycleId: input.cycleId,
-    scheduledPaymentId: input.scheduledPaymentId,
-    description: "Pago de compromiso",
-  })
+  try {
+    const access = await requireWritableAppAccess()
+    const supabase = await requireSupabase()
+    const { data: payment, error } = await supabase
+      .from("scheduled_payments")
+      .select("id, category_id, name")
+      .eq("id", input.scheduledPaymentId)
+      .eq("user_id", access.user!.id)
+      .maybeSingle()
+    if (error) return { error: error.message }
+    if (!payment) return { error: "El compromiso no existe o no te pertenece." }
+
+    return saveTransactionAction({
+      kind: "expense",
+      amount: input.amount,
+      occurredOn: input.occurredOn,
+      accountId: input.accountId,
+      cycleId: input.cycleId,
+      categoryId: payment.category_id ?? "",
+      scheduledPaymentId: input.scheduledPaymentId,
+      description: payment.name || "Pago de compromiso",
+    })
+  } catch (error) {
+    return actionError(error, "No pudimos registrar el pago.")
+  }
 }
 
 export async function markNotificationReadAction(id: string): Promise<ActionResult> {

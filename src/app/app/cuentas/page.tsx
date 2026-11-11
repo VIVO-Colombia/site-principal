@@ -4,14 +4,13 @@ import { Button } from "@/components/ui/button"
 import { requireAppAccess } from "@/lib/auth/access"
 import { computeAccountBalances } from "@/lib/finance/calculations"
 import { accountKindLabels } from "@/lib/finance/labels"
-import { getFinanceBootstrap, listTransactions } from "@/lib/finance/queries"
+import { getFinanceBootstrap } from "@/lib/finance/queries"
 import { formatCop } from "@/lib/format"
 
 export default async function AccountsPage() {
   const access = await requireAppAccess()
   const data = await getFinanceBootstrap(access.user!.id)
-  const allTransactions = await listTransactions(access.user!.id, { limit: 2000 })
-  const balances = computeAccountBalances(data.accounts, allTransactions)
+  const balances = computeAccountBalances(data.accounts, data.ledgerTransactions)
 
   return (
     <div className="mx-auto grid max-w-4xl gap-4">

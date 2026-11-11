@@ -1,6 +1,26 @@
 import "server-only"
 
+import { selectCurrentSubscription, summarizeSubscriptions } from "@/lib/admin/metrics"
 import { requireSupabase } from "@/lib/supabase/require"
+
+const PAGE_SIZE = 1000
+
+async function fetchAll<T>(table: string, columns: string): Promise<T[]> {
+  const supabase = await requireSupabase()
+  const rows: T[] = []
+  let from = 0
+
+  while (true) {
+    const { data, error } = await supabase.from(table).select(columns).range(from, from + PAGE_SIZE - 1)
+    if (error) throw new Error(error.message)
+    const chunk = (data as T[]) ?? []
+    rows.push(...chunk)
+    if (chunk.length < PAGE_SIZE) break
+    from += chunk.length
+  }
+
+  return rows
+}
 import type {
   AuditLog,
   Payment,
@@ -33,67 +53,53 @@ export async function listPaymentMethods(includeInactive = false) {
 
 export async function getAdminMetrics() {
   const supabase = await requireSupabase()
-  const now = new Date()
-  const inTwoWeeks = new Date(now.getTime() + 14 * 24 * 60 * 60 * 1000).toISOString()
 
-  const [
-    users,
-    enabled,
-    suspended,
-    activeSubs,
-    expiredSubs,
-    trials,
-    pendingRequests,
-    upcoming,
-    approvedPayments,
-  ] = await Promise.all([
+  const [users, enabled, suspended, subscriptions, pendingRequests, approvedPayments] = await Promise.all([
     supabase.from("profiles").select("id", { count: "exact", head: true }),
     supabase.from("profiles").select("id", { count: "exact", head: true }).eq("account_status", "enabled"),
     supabase.from("profiles").select("id", { count: "exact", head: true }).eq("account_status", "suspended"),
-    supabase.from("subscriptions").select("id", { count: "exact", head: true }).eq("status", "active"),
-    supabase.from("subscriptions").select("id", { count: "exact", head: true }).eq("status", "expired"),
-    supabase.from("subscriptions").select("id", { count: "exact", head: true }).eq("status", "trialing"),
+    fetchAll<Pick<Subscription, "user_id" | "status" | "ends_at" | "created_at">>(
+      "subscriptions",
+      "user_id, status, ends_at, created_at"
+    ),
     supabase.from("payment_requests").select("id", { count: "exact", head: true }).eq("status", "submitted"),
-    supabase
-      .from("subscriptions")
-      .select("id", { count: "exact", head: true })
-      .in("status", ["active", "trialing"])
-      .lte("ends_at", inTwoWeeks)
-      .gte("ends_at", now.toISOString()),
     supabase.from("payments").select("id", { count: "exact", head: true }),
   ])
+
+  const totals = summarizeSubscriptions(subscriptions)
 
   return {
     users: users.count ?? 0,
     enabled: enabled.count ?? 0,
     suspended: suspended.count ?? 0,
-    activeSubs: activeSubs.count ?? 0,
-    expiredSubs: expiredSubs.count ?? 0,
-    trials: trials.count ?? 0,
+    activeSubs: totals.activeSubs,
+    expiredSubs: totals.expiredSubs,
+    trials: totals.trials,
     pendingRequests: pendingRequests.count ?? 0,
-    upcoming: upcoming.count ?? 0,
+    upcoming: totals.upcoming,
     approvedPayments: approvedPayments.count ?? 0,
   }
 }
 
 export async function listAdminUsers() {
-  const supabase = await requireSupabase()
-  const [{ data: profiles, error: profileError }, { data: subscriptions, error: subError }] = await Promise.all([
-    supabase.from("profiles").select("*").order("created_at", { ascending: false }),
-    supabase.from("subscriptions").select("*").order("created_at", { ascending: false }),
+  const [profiles, subscriptions] = await Promise.all([
+    fetchAll<Profile>("profiles", "*"),
+    fetchAll<Subscription>("subscriptions", "*"),
   ])
-  if (profileError) throw new Error(profileError.message)
-  if (subError) throw new Error(subError.message)
 
-  const latestByUser = new Map<string, Subscription>()
-  for (const row of (subscriptions as Subscription[]) ?? []) {
-    if (!latestByUser.has(row.user_id)) latestByUser.set(row.user_id, row)
+  const byUser = new Map<string, Subscription[]>()
+  for (const row of subscriptions) {
+    const list = byUser.get(row.user_id) ?? []
+    list.push(row)
+    byUser.set(row.user_id, list)
   }
 
-  return ((profiles as Profile[]) ?? []).map((profile) => ({
-    profile,
-    subscription: latestByUser.get(profile.id) ?? null,
-  }))
+  return [...profiles]
+    .sort((a, b) => b.created_at.localeCompare(a.created_at))
+    .map((profile) => ({
+      profile,
+      subscription: selectCurrentSubscription(byUser.get(profile.id) ?? []) ?? null,
+    }))
 }
 
 export async function getAdminUser(userId: string) {

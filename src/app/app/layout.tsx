@@ -2,7 +2,7 @@ import { Suspense } from "react"
 
 import { AppShell } from "@/components/app-shell/app-shell"
 import { requireAppAccess } from "@/lib/auth/access"
-import { getFinanceBootstrap } from "@/lib/finance/queries"
+import { getFinanceShell } from "@/lib/finance/queries"
 
 export default function FinancialLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -14,7 +14,7 @@ export default function FinancialLayout({ children }: { children: React.ReactNod
 
 async function GuardedApp({ children }: { children: React.ReactNode }) {
   const access = await requireAppAccess()
-  const bootstrap = await getFinanceBootstrap(access.user!.id).catch(() => null)
+  const bootstrap = await getFinanceShell(access.user!.id).catch(() => null)
 
   return (
     <AppShell

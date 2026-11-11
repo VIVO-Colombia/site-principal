@@ -42,16 +42,21 @@ export default async function AppHomePage() {
     )
   }
 
-  const balances = computeAccountBalances(data.accounts, data.transactions)
+  const balances = computeAccountBalances(data.accounts, data.ledgerTransactions)
   const accountBalance = addAmounts(...balances.map((item) => item.balance))
-  const cycleMetrics = computeCycleMetrics(data.transactions)
-  const budgetRows = computeBudgetRows(data.categories, data.budgets, data.transactions, data.scheduledPayments)
+  const cycleMetrics = computeCycleMetrics(data.cycleTransactions)
+  const budgetRows = computeBudgetRows(
+    data.categories,
+    data.budgets,
+    data.cycleTransactions,
+    data.scheduledPayments
+  )
   const availableToBudget = computeAvailableToBudget(cycleMetrics.incomes, budgetRows)
   const groups = groupBudgetTotals(budgetRows)
   const upcoming = data.scheduledPayments
     .filter((item) => item.status !== "paid" && item.status !== "cancelled")
     .slice(0, 4)
-  const recent = data.transactions.filter((item) => item.status === "posted").slice(0, 6)
+  const recent = data.cycleTransactions.filter((item) => item.status === "posted").slice(0, 6)
   const budgetRemaining = addAmounts(
     ...groups.map((item) => item.remaining)
   )
