@@ -14,9 +14,10 @@ describe("roles", () => {
   it("keeps read and write independent of the account role", () => {
     expect(canWriteFinancialData("active")).toBe(true)
     expect(canWriteFinancialData("trialing")).toBe(true)
-    expect(canWriteFinancialData("expired")).toBe(false)
+    expect(canWriteFinancialData("expired")).toBe(true)
     expect(canReadFinancialData("expired")).toBe(true)
-    expect(canReadFinancialData("pending")).toBe(false)
+    expect(canReadFinancialData("pending")).toBe(true)
+    expect(canWriteFinancialData("suspended")).toBe(false)
   })
 })
 

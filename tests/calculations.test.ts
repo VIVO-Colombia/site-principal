@@ -5,6 +5,7 @@ import {
   computeAvailableToBudget,
   computeBudgetRows,
   computeCycleMetrics,
+  computeIncludedBalance,
 } from "../src/lib/finance/calculations"
 import { parseAmountInput, toAmount } from "../src/lib/finance/money"
 import type {

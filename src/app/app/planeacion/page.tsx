@@ -1,9 +1,4 @@
-import { CycleForm } from "@/components/finance/cycle-form"
-import { PlanningBoard } from "@/components/finance/planning-board"
-import { EmptyState } from "@/components/shared/empty-state"
-import { requireAppAccess } from "@/lib/auth/access"
-import { computeBudgetRows } from "@/lib/finance/calculations"
-import { getFinanceBootstrap } from "@/lib/finance/queries"
+import { redirect } from "next/navigation"
 
 export default async function PlanningPage() {
   const access = await requireAppAccess()

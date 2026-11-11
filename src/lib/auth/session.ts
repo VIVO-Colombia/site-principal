@@ -15,6 +15,7 @@ function fallbackProfile(user: { id: string; email?: string; created_at: string;
     role: "user",
     account_status: "enabled",
     timezone: "America/Bogota",
+    onboarding_completed_at: null,
     created_at: user.created_at,
     updated_at: user.created_at,
   }

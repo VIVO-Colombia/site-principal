@@ -25,7 +25,7 @@ export function PlansSection({
             escondida en una pasarela.
           </p>
         </div>
-        <div className="mt-10 grid gap-4 md:grid-cols-2">
+        <div className="mt-10 grid gap-4 md:grid-cols-3">
           {items.map((plan) => (
             <article
               key={plan.id}
@@ -38,7 +38,7 @@ export function PlansSection({
               <h3 className="mt-2 text-2xl font-semibold tracking-tight">{plan.name}</h3>
               <p className="mt-2 text-sm leading-6 text-[#5b6b82]">{plan.summary}</p>
               <p className="mt-5 rounded-2xl bg-[#f7f9fc] px-4 py-3 text-sm font-medium">
-                Precio al solicitar acceso
+                {plan.id === "gratis" ? "Incluido al crear tu cuenta" : "Precio al solicitar acceso"}
               </p>
               <ul className="mt-5 space-y-2 text-sm text-[#3d4d66]">
                 {plan.features.map((feature) => (
@@ -54,7 +54,7 @@ export function PlansSection({
                   variant={plan.highlighted ? "primary" : "secondary"}
                   className="w-full sm:w-auto"
                 >
-                  Solicitar acceso
+                  {plan.id === "gratis" ? "Crear cuenta Free" : "Solicitar Premium"}
                 </CtaLink>
               </div>
             </article>

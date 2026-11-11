@@ -8,7 +8,7 @@ import { ActivationForm } from "@/components/activate/activation-form"
 import { AuthCard } from "@/components/auth/auth-card"
 import { Button } from "@/components/ui/button"
 import { listPaymentMethods } from "@/lib/admin/queries"
-import { canReadFinancialData, isSuperAdminRole } from "@/lib/auth/roles"
+import { isSuperAdminRole } from "@/lib/auth/roles"
 import { currentStatus } from "@/lib/auth/access"
 import { getAccessContext } from "@/lib/auth/session"
 import { accessStateLabel } from "@/lib/billing/status"
@@ -46,7 +46,7 @@ async function ActivateContent({
     if (isSuperAdminRole(context.profile?.role)) {
       redirect("/admin")
     }
-    if (status && canReadFinancialData(status)) {
+    if (status !== "suspended") {
       redirect("/app")
     }
   }

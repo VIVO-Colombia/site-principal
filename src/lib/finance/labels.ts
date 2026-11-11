@@ -9,7 +9,8 @@ export const accountKindLabels: Record<AccountKind, string> = {
   cash: "Efectivo",
   bank: "Cuenta bancaria",
   digital_wallet: "Billetera digital",
-  pocket: "Bolsillo o reserva",
+  pocket: "Bolsillo",
+  savings: "Ahorro",
   other: "Otra",
 }
 

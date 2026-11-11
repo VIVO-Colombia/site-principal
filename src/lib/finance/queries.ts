@@ -168,6 +168,7 @@ export async function getFinanceShell(userId: string) {
     listCategories(userId),
     listNotifications(userId),
     getPreferredCycleId(),
+    listAllTransactions(userId),
   ])
   const cycle = resolveActiveCycle(cycles, preferredCycleId)
 

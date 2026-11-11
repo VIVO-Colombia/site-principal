@@ -6,7 +6,7 @@ import { getFinanceShell } from "@/lib/finance/queries"
 
 export default function FinancialLayout({ children }: { children: React.ReactNode }) {
   return (
-    <Suspense fallback={<ShellFallback />}>
+    <Suspense fallback={<div className="app-scope min-h-full" />}>
       <GuardedApp>{children}</GuardedApp>
     </Suspense>
   )

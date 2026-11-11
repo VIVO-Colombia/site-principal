@@ -14,6 +14,19 @@ export type CatalogPlan = {
  */
 export const catalogPlans: CatalogPlan[] = [
   {
+    id: "gratis",
+    name: "Free",
+    cadence: "Sin vencimiento",
+    summary: "Entras, confirmas el correo y usas el planeador. Sin aprobación del Super Admin.",
+    features: [
+      "Cuentas, movimientos y transferencias",
+      "Presupuesto por ciclo y pagos programados",
+      "Consulta, historial y exportación básica",
+      "Sin OCR ni comprobantes fotográficos",
+    ],
+    availability: "available-to-request",
+  },
+  {
     id: "mensual",
     name: "Mensual",
     cadence: "Un mes",

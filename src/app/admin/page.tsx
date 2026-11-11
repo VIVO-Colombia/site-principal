@@ -15,11 +15,12 @@ export default async function AdminHomePage() {
     { label: "Usuarios registrados", value: metrics.users, href: adminRoutes.users },
     { label: "Habilitados", value: metrics.enabled, href: adminRoutes.users },
     { label: "Suspendidos", value: metrics.suspended, href: adminRoutes.users },
-    { label: "Suscripciones activas", value: metrics.activeSubs, href: adminRoutes.subscriptions },
-    { label: "Vencidas", value: metrics.expiredSubs, href: adminRoutes.subscriptions },
-    { label: "Pruebas activas", value: metrics.trials, href: adminRoutes.subscriptions },
+    { label: "Usuarios Free", value: metrics.freeUsers, href: adminRoutes.users },
+    { label: "Usuarios Premium", value: metrics.premiumUsers, href: adminRoutes.subscriptions },
+    { label: "Pruebas Premium", value: metrics.trials, href: adminRoutes.subscriptions },
+    { label: "Premium por vencer", value: metrics.upcoming, href: adminRoutes.subscriptions },
+    { label: "Vencidas históricas", value: metrics.expiredSubs, href: adminRoutes.subscriptions },
     { label: "Solicitudes pendientes", value: metrics.pendingRequests, href: adminRoutes.requests },
-    { label: "Vencimientos próximos", value: metrics.upcoming, href: adminRoutes.subscriptions },
     { label: "Pagos registrados", value: metrics.approvedPayments, href: adminRoutes.payments },
   ]
 

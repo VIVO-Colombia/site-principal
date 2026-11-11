@@ -64,6 +64,7 @@ export async function getAdminMetrics() {
     ),
     supabase.from("payment_requests").select("id", { count: "exact", head: true }).eq("status", "submitted"),
     supabase.from("payments").select("id", { count: "exact", head: true }),
+    supabase.from("subscriptions").select("user_id,status,ends_at"),
   ])
 
   const totals = summarizeSubscriptions(subscriptions)
@@ -78,6 +79,8 @@ export async function getAdminMetrics() {
     pendingRequests: pendingRequests.count ?? 0,
     upcoming: totals.upcoming,
     approvedPayments: approvedPayments.count ?? 0,
+    freeUsers,
+    premiumUsers,
   }
 }
 

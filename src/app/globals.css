@@ -29,6 +29,7 @@
   --color-destructive: var(--destructive);
   --color-success: var(--success);
   --color-navy: var(--navy);
+  --color-warm: var(--warm, #f49a52);
   --color-accent-foreground: var(--accent-foreground);
   --color-accent: var(--accent);
   --color-muted-foreground: var(--muted-foreground);
@@ -200,6 +201,46 @@
     linear-gradient(to bottom, rgb(23 36 60 / 0.035) 1px, transparent 1px);
   background-size: 56px 56px;
   mask-image: radial-gradient(ellipse 70% 60% at 50% 40%, #000 35%, transparent 80%);
+}
+
+.app-scope {
+  --background: #faf9f6;
+  --foreground: #191a1d;
+  --card: #ffffff;
+  --card-foreground: #191a1d;
+  --popover: #ffffff;
+  --popover-foreground: #191a1d;
+  --primary: #3568ed;
+  --primary-foreground: #ffffff;
+  --secondary: #f3f1ec;
+  --secondary-foreground: #191a1d;
+  --muted: #f3f1ec;
+  --muted-foreground: #777a80;
+  --accent: #f3f1ec;
+  --accent-foreground: #191a1d;
+  --destructive: #e45353;
+  --success: #20a474;
+  --navy: #191a1d;
+  --warm: #f49a52;
+  --border: #eae9e6;
+  --input: #eae9e6;
+  --ring: #3568ed;
+  background: var(--background);
+  color: var(--foreground);
+}
+
+.app-scope h1,
+.app-scope h2,
+.app-scope .font-heading {
+  font-family: var(--font-giselle), var(--font-sans), ui-sans-serif, system-ui, sans-serif;
+}
+
+.hide-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
 }
 
 @media (prefers-reduced-motion: reduce) {

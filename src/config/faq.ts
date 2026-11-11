@@ -7,7 +7,7 @@ export function getFaqItems() {
     {
       question: `¿Cómo funciona ${name}?`,
       answer:
-        "Creas la cuenta, eliges un plan y envías la solicitud de activación. Cuando el acceso queda habilitado, armas tu ciclo, tu presupuesto y empiezas a registrar movimientos. No hay prueba automática al registrarte.",
+        "Creas la cuenta, confirmas el correo y entras al plan Free. Armas tu ciclo, tu presupuesto y registras movimientos desde una sola pantalla. Premium se solicita aparte; las pruebas Premium solo las concede un Super Admin.",
     },
     {
       question: "¿Puedo usarlo desde el celular?",
@@ -17,7 +17,7 @@ export function getFaqItems() {
     {
       question: "¿Cómo registro un gasto?",
       answer:
-        "Con el acceso activo entras a Movimientos, eliges tipo, valor, cuenta y categoría. Las transferencias mueven dinero entre tus cuentas y no cuentan como ingreso ni como gasto.",
+        "Abres la ruleta inferior, eliges Gasto, introduces el valor y guardas. Las transferencias mueven dinero entre tus cuentas y no cuentan como ingreso ni como gasto.",
     },
     {
       question: "¿Cómo se paga el plan?",

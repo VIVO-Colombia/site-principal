@@ -24,6 +24,7 @@ export type AccountBalance = {
   name: string
   kind: FinancialAccount["kind"]
   isActive: boolean
+  includeInTotal?: boolean
   opening: number
   balance: number
   negative: boolean
@@ -56,11 +57,18 @@ export function computeAccountBalances(
       name: account.name,
       kind: account.kind,
       isActive: account.is_active,
+      includeInTotal: account.include_in_total !== false,
       opening,
       balance,
       negative: balance < 0,
     }
   })
+}
+
+export function computeIncludedBalance(balances: AccountBalance[]) {
+  return addAmounts(
+    ...balances.filter((item) => item.isActive && item.includeInTotal !== false).map((item) => item.balance)
+  )
 }
 
 export function computeCycleMetrics(
