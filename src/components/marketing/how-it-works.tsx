@@ -6,8 +6,8 @@ const steps = [
   },
   {
     number: "02",
-    title: "Activa el plan.",
-    body: "Eliges vigencia, envías el comprobante y te habilitamos el acceso.",
+    title: "Entra al plan Free.",
+    body: "Confirmas el correo y empiezas. Premium se pide solo si lo quieres.",
   },
   {
     number: "03",
@@ -26,8 +26,7 @@ export function HowItWorks() {
             Tres pasos. Empiezas este mes.
           </h2>
           <p className="mt-3 text-[#5b6b82]">
-            No hay prueba automática al registrarte. Si hace falta una, el equipo la abre con fecha
-            de inicio y de cierre.
+            El plan Free no vence. Las pruebas Premium solo las abre el equipo, con fecha de cierre.
           </p>
         </div>
         <ol className="mt-10 grid gap-4 md:grid-cols-3">

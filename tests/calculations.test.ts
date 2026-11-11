@@ -5,6 +5,7 @@ import {
   computeAvailableToBudget,
   computeBudgetRows,
   computeCycleMetrics,
+  computeIncludedBalance,
 } from "../src/lib/finance/calculations"
 import { parseAmountInput, toAmount } from "../src/lib/finance/money"
 import type { FinancialAccount, FinancialBudget, FinancialCategory, FinancialTransaction } from "../src/types/database"
@@ -75,6 +76,16 @@ describe("account balances", () => {
     expect(cycle.incomes).toBe(500)
     expect(cycle.outflows).toBe(200)
     expect(cycle.cycleBalance).toBe(300)
+  })
+
+  it("excludes accounts opted out of the total without dropping their own balance", () => {
+    const accounts = [
+      account({ id: "a1", name: "Banco", opening_balance: 1000 }),
+      account({ id: "a2", name: "Ahorro", opening_balance: 400, include_in_total: false }),
+    ]
+    const balances = computeAccountBalances(accounts, [])
+    expect(balances.find((item) => item.accountId === "a2")?.balance).toBe(400)
+    expect(computeIncludedBalance(balances)).toBe(1000)
   })
 
   it("ignores voided transactions", () => {

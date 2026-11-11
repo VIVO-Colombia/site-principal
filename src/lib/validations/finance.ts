@@ -13,8 +13,11 @@ export const cycleSchema = z.object({
 export const accountSchema = z.object({
   id: z.string().uuid().optional(),
   name: z.string().trim().min(2, "Ingresa un nombre").max(80),
-  kind: z.enum(["cash", "bank", "digital_wallet", "pocket", "other"]),
+  kind: z.enum(["cash", "bank", "digital_wallet", "pocket", "savings", "other"]),
   openingBalance: amountString.or(z.literal("0")).or(z.literal("")),
+  color: z.string().max(16).optional(),
+  icon: z.string().max(40).optional(),
+  includeInTotal: z.enum(["true", "false", "on", ""]).optional(),
   notes: z.string().max(500).optional(),
 })
 
@@ -22,6 +25,8 @@ export const categorySchema = z.object({
   id: z.string().uuid().optional(),
   name: z.string().trim().min(2, "Ingresa un nombre").max(80),
   groupCode: z.enum(["income", "scheduled_payment", "expense", "savings", "debt"]),
+  color: z.string().max(16).optional(),
+  icon: z.string().max(40).optional(),
 })
 
 export const budgetSchema = z.object({

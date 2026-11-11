@@ -1,5 +1,6 @@
 import "server-only"
 
+import { effectiveSubscriptionStatus } from "@/lib/billing/status"
 import { requireSupabase } from "@/lib/supabase/require"
 import type {
   AuditLog,
@@ -40,19 +41,16 @@ export async function getAdminMetrics() {
     users,
     enabled,
     suspended,
-    activeSubs,
     expiredSubs,
-    trials,
     pendingRequests,
     upcoming,
     approvedPayments,
+    subs,
   ] = await Promise.all([
     supabase.from("profiles").select("id", { count: "exact", head: true }),
     supabase.from("profiles").select("id", { count: "exact", head: true }).eq("account_status", "enabled"),
     supabase.from("profiles").select("id", { count: "exact", head: true }).eq("account_status", "suspended"),
-    supabase.from("subscriptions").select("id", { count: "exact", head: true }).eq("status", "active"),
     supabase.from("subscriptions").select("id", { count: "exact", head: true }).eq("status", "expired"),
-    supabase.from("subscriptions").select("id", { count: "exact", head: true }).eq("status", "trialing"),
     supabase.from("payment_requests").select("id", { count: "exact", head: true }).eq("status", "submitted"),
     supabase
       .from("subscriptions")
@@ -61,18 +59,34 @@ export async function getAdminMetrics() {
       .lte("ends_at", inTwoWeeks)
       .gte("ends_at", now.toISOString()),
     supabase.from("payments").select("id", { count: "exact", head: true }),
+    supabase.from("subscriptions").select("user_id,status,ends_at"),
   ])
+
+  const classified = new Map<string, "premium" | "trial" | "expired">()
+  for (const row of (subs.data as Pick<Subscription, "user_id" | "status" | "ends_at">[] | null) ?? []) {
+    const status = effectiveSubscriptionStatus(row)
+    if (status === "trialing") classified.set(row.user_id, "trial")
+    else if (status === "active") classified.set(row.user_id, "premium")
+    else if (status === "expired" && classified.get(row.user_id) !== "premium" && classified.get(row.user_id) !== "trial") {
+      classified.set(row.user_id, "expired")
+    }
+  }
+  const premiumUsers = [...classified.values()].filter((item) => item === "premium").length
+  const trialUsers = [...classified.values()].filter((item) => item === "trial").length
+  const freeUsers = Math.max((enabled.count ?? 0) - premiumUsers - trialUsers, 0)
 
   return {
     users: users.count ?? 0,
     enabled: enabled.count ?? 0,
     suspended: suspended.count ?? 0,
-    activeSubs: activeSubs.count ?? 0,
+    activeSubs: premiumUsers,
     expiredSubs: expiredSubs.count ?? 0,
-    trials: trials.count ?? 0,
+    trials: trialUsers,
     pendingRequests: pendingRequests.count ?? 0,
     upcoming: upcoming.count ?? 0,
     approvedPayments: approvedPayments.count ?? 0,
+    freeUsers,
+    premiumUsers,
   }
 }
 

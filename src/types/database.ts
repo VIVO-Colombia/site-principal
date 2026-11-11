@@ -9,11 +9,13 @@ export type Profile = {
   role: UserRole
   account_status: AccountStatus
   timezone: string
+  onboarding_completed_at?: string | null
   created_at: string
   updated_at: string
 }
 
 export type PlanCadence = "monthly" | "quarterly" | "semiannual" | "annual" | "custom"
+export type PlanTier = "free" | "premium"
 
 export type Plan = {
   id: string
@@ -28,6 +30,8 @@ export type Plan = {
   visible_on_landing: boolean
   sort_order: number
   features: unknown
+  tier?: PlanTier
+  capabilities?: unknown
   created_at: string
   updated_at: string
 }
@@ -114,7 +118,7 @@ export type InAppNotification = {
 }
 
 export type CycleStatus = "open" | "closed"
-export type AccountKind = "cash" | "bank" | "digital_wallet" | "pocket" | "other"
+export type AccountKind = "cash" | "bank" | "digital_wallet" | "pocket" | "savings" | "other"
 export type CategoryGroup = "income" | "scheduled_payment" | "expense" | "savings" | "debt"
 export type TransactionKind =
   | "income"
@@ -146,6 +150,9 @@ export type FinancialAccount = {
   opening_balance: number | string
   allow_negative: boolean
   is_active: boolean
+  include_in_total?: boolean
+  color?: string | null
+  icon?: string | null
   notes: string | null
 }
 

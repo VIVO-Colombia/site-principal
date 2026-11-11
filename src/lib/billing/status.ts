@@ -35,16 +35,16 @@ export function accessStateLabel(context: AccessContext) {
   const status = effectiveSubscriptionStatus(context.subscription)
   switch (status) {
     case "active":
-      return "Suscripción activa"
+      return "Premium activo"
     case "trialing":
-      return "Prueba gratuita autorizada"
+      return "Prueba Premium autorizada"
     case "expired":
-      return "Suscripción vencida"
+      return "Plan Free"
     case "suspended":
       return "Suscripción suspendida"
     case "cancelled":
-      return "Suscripción cancelada"
+      return "Plan Free"
     default:
-      return "Cuenta sin suscripción"
+      return "Plan Free"
   }
 }

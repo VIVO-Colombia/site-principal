@@ -18,9 +18,9 @@ export function isSuperAdminRole(role: string | null | undefined) {
 }
 
 export function canWriteFinancialData(status: SubscriptionStatus | null) {
-  return status === "active" || status === "trialing"
+  return status !== "suspended"
 }
 
 export function canReadFinancialData(status: SubscriptionStatus | null) {
-  return status === "active" || status === "trialing" || status === "expired"
+  return status !== "suspended"
 }

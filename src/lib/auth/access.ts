@@ -3,11 +3,8 @@ import "server-only"
 import { redirect } from "next/navigation"
 
 import { publicRoutes } from "@/config/routes"
-import {
-  canReadFinancialData,
-  isSuperAdminRole,
-  type SubscriptionStatus,
-} from "@/lib/auth/roles"
+import { hasCapability, resolveEntitlement, type Capability } from "@/lib/auth/capabilities"
+import { isSuperAdminRole, type SubscriptionStatus } from "@/lib/auth/roles"
 import { getAccessContext } from "@/lib/auth/session"
 import { effectiveSubscriptionStatus } from "@/lib/billing/status"
 import type { AccessContext } from "@/types/database"
@@ -37,17 +34,11 @@ export function resolvePostAuthPath(context: AccessContext) {
     return "/admin"
   }
 
-  const status = currentStatus(context)
-
-  if (!status || status === "pending" || status === "cancelled" || status === "suspended") {
+  if (resolveEntitlement(context) === "blocked") {
     return publicRoutes.activate
   }
 
-  if (canReadFinancialData(status)) {
-    return "/app"
-  }
-
-  return publicRoutes.activate
+  return "/app"
 }
 
 export async function requireUser() {
@@ -75,20 +66,15 @@ export async function requireAppAccess() {
     redirect(`${publicRoutes.activate}?estado=suspendida`)
   }
 
-  if (isSuperAdminRole(context.profile?.role)) {
-    return { ...context, readOnly: false, status: currentStatus(context) }
-  }
-
-  const status = currentStatus(context)
-
-  if (!status || status === "pending" || status === "cancelled" || status === "suspended") {
-    redirect(publicRoutes.activate)
+  if (resolveEntitlement(context) === "blocked") {
+    redirect(`${publicRoutes.activate}?estado=suspendida`)
   }
 
   return {
     ...context,
-    status,
-    readOnly: status === "expired",
+    status: currentStatus(context),
+    entitlement: resolveEntitlement(context),
+    readOnly: false,
   }
 }
 
@@ -109,7 +95,15 @@ export async function requireAdminAccess() {
 export async function requireWritableAppAccess() {
   const access = await requireAppAccess()
   if (access.readOnly) {
-    throw new Error("Tu suscripción vencida permite consultar, pero no crear ni modificar registros.")
+    throw new Error("Tu cuenta no puede modificar registros en este momento.")
+  }
+  return access
+}
+
+export async function requireCapability(capability: Capability) {
+  const access = await requireWritableAppAccess()
+  if (!hasCapability(access, capability)) {
+    throw new Error("Esta función forma parte de Premium.")
   }
   return access
 }

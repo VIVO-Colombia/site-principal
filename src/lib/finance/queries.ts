@@ -136,22 +136,49 @@ export async function listNotifications(userId: string) {
   return (data as InAppNotification[]) ?? []
 }
 
+export const TRANSACTION_PAGE_SIZE = 1000
+
+export async function listAllTransactions(userId: string) {
+  const rows: FinancialTransaction[] = []
+  let from = 0
+
+  while (true) {
+    const supabase = await requireSupabase()
+    const to = from + TRANSACTION_PAGE_SIZE - 1
+    const { data, error } = await supabase
+      .from("financial_transactions")
+      .select("*")
+      .eq("user_id", userId)
+      .order("occurred_on", { ascending: false })
+      .order("created_at", { ascending: false })
+      .range(from, to)
+    if (error) throw new Error(error.message)
+    const page = (data as FinancialTransaction[]) ?? []
+    rows.push(...page)
+    if (page.length < TRANSACTION_PAGE_SIZE) break
+    from += TRANSACTION_PAGE_SIZE
+  }
+
+  return rows
+}
+
 export async function getFinanceBootstrap(userId: string) {
-  const [cycles, accounts, categories, notifications, preferredCycleId] = await Promise.all([
+  const [cycles, accounts, categories, notifications, preferredCycleId, ledgerTransactions] = await Promise.all([
     listCycles(userId),
     listAccounts(userId),
     listCategories(userId),
     listNotifications(userId),
     getPreferredCycleId(),
+    listAllTransactions(userId),
   ])
   const cycle = resolveActiveCycle(cycles, preferredCycleId)
-  const [budgets, transactions, scheduledPayments] = cycle
-    ? await Promise.all([
-        listBudgets(userId, cycle.id),
-        listTransactions(userId, { cycleId: cycle.id, limit: 80 }),
-        listScheduledPayments(userId, cycle.id),
-      ])
-    : [[], [], []]
+  const [budgets, scheduledPayments] = cycle
+    ? await Promise.all([listBudgets(userId, cycle.id), listScheduledPayments(userId, cycle.id)])
+    : [[], []]
+
+  const transactions = cycle
+    ? ledgerTransactions.filter((item) => item.cycle_id === cycle.id)
+    : []
 
   return {
     cycles,
@@ -160,6 +187,7 @@ export async function getFinanceBootstrap(userId: string) {
     categories,
     budgets,
     transactions,
+    ledgerTransactions,
     scheduledPayments,
     notifications,
     unreadNotifications: notifications.filter((item) => !item.read_at).length,

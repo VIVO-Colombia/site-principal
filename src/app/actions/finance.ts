@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache"
 import { cookies } from "next/headers"
 
-import { requireWritableAppAccess } from "@/lib/auth/access"
+import { requireAppAccess, requireWritableAppAccess } from "@/lib/auth/access"
 import { actionError, type ActionResult } from "@/lib/action-result"
 import { parseAmountInput, toAmount } from "@/lib/finance/money"
 import { CYCLE_COOKIE } from "@/lib/finance/queries"
@@ -188,6 +188,16 @@ export async function upsertAccountAction(input: unknown): Promise<ActionResult>
     const openingRaw = parsed.data.openingBalance?.trim() ?? ""
     const opening = !openingRaw || openingRaw === "0" ? 0 : parseAmountInput(openingRaw)
 
+    const includeInTotal =
+      parsed.data.includeInTotal == null
+        ? true
+        : parsed.data.includeInTotal === "true" || parsed.data.includeInTotal === "on"
+    const extras = {
+      color: parsed.data.color || null,
+      icon: parsed.data.icon || null,
+      include_in_total: includeInTotal,
+    }
+
     if (parsed.data.id) {
       const { error } = await supabase
         .from("financial_accounts")
@@ -195,6 +205,7 @@ export async function upsertAccountAction(input: unknown): Promise<ActionResult>
           name: parsed.data.name,
           kind: parsed.data.kind,
           notes: parsed.data.notes || null,
+          ...extras,
         })
         .eq("id", parsed.data.id)
         .eq("user_id", access.user!.id)
@@ -209,6 +220,7 @@ export async function upsertAccountAction(input: unknown): Promise<ActionResult>
       kind: parsed.data.kind,
       opening_balance: opening,
       notes: parsed.data.notes || null,
+      ...extras,
     })
     if (error) return { error: error.message }
     refreshFinance()
@@ -245,7 +257,12 @@ export async function upsertCategoryAction(input: unknown): Promise<ActionResult
     if (parsed.data.id) {
       const { error } = await supabase
         .from("financial_categories")
-        .update({ name: parsed.data.name, group_code: parsed.data.groupCode })
+        .update({
+          name: parsed.data.name,
+          group_code: parsed.data.groupCode,
+          color: parsed.data.color || null,
+          icon: parsed.data.icon || null,
+        })
         .eq("id", parsed.data.id)
         .eq("user_id", access.user!.id)
       if (error) return { error: error.message }
@@ -257,6 +274,8 @@ export async function upsertCategoryAction(input: unknown): Promise<ActionResult
       user_id: access.user!.id,
       name: parsed.data.name,
       group_code: parsed.data.groupCode,
+      color: parsed.data.color || null,
+      icon: parsed.data.icon || null,
     })
     if (error) return { error: error.message }
     refreshFinance()
@@ -435,6 +454,22 @@ export async function recordScheduledPaymentAction(input: {
     scheduledPaymentId: input.scheduledPaymentId,
     description: "Pago de compromiso",
   })
+}
+
+export async function completeOnboardingAction(): Promise<ActionResult> {
+  try {
+    const access = await requireWritableAppAccess()
+    const supabase = await requireSupabase()
+    const { error } = await supabase
+      .from("profiles")
+      .update({ onboarding_completed_at: new Date().toISOString() })
+      .eq("id", access.user!.id)
+    if (error) return { error: error.message }
+    refreshFinance()
+    return { success: "Listo. Ya puedes registrar tu primer movimiento." }
+  } catch (error) {
+    return actionError(error, "No pudimos guardar el onboarding.")
+  }
 }
 
 export async function markNotificationReadAction(id: string): Promise<ActionResult> {

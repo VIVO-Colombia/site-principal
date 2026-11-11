@@ -30,6 +30,8 @@ export function AccountForm({
       name: formData.get("name"),
       kind: formData.get("kind"),
       openingBalance: formData.get("openingBalance"),
+      color: formData.get("color"),
+      includeInTotal: formData.get("includeInTotal") ? "true" : "false",
       notes: formData.get("notes"),
     })
     setPending(false)
@@ -68,6 +70,20 @@ export function AccountForm({
           <p className="text-xs text-[#5b6b82]">El saldo puede quedar negativo; se mostrará una advertencia.</p>
         </div>
       ) : null}
+      <div className="grid gap-2">
+        <Label htmlFor="account-color">Color</Label>
+        <Input id="account-color" name="color" defaultValue={account?.color ?? "#3568ED"} className="h-11 rounded-xl" />
+      </div>
+      <label className="flex min-h-11 items-center gap-2 text-sm">
+        <input
+          type="checkbox"
+          name="includeInTotal"
+          value="true"
+          defaultChecked={account?.include_in_total !== false}
+          className="size-4"
+        />
+        Incluir en el saldo total
+      </label>
       <div className="grid gap-2">
         <Label htmlFor="account-notes">Observaciones</Label>
         <Textarea id="account-notes" name="notes" defaultValue={account?.notes ?? ""} className="rounded-xl" />

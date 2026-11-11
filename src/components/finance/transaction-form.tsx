@@ -33,6 +33,7 @@ export function TransactionForm({
   transaction,
   onSaved,
   readOnly,
+  lockKind,
 }: {
   accounts: FinancialAccount[]
   categories: FinancialCategory[]
@@ -41,6 +42,7 @@ export function TransactionForm({
   transaction?: FinancialTransaction | null
   onSaved?: () => void
   readOnly?: boolean
+  lockKind?: boolean
 }) {
   const router = useRouter()
   const amountRef = useRef<HTMLInputElement>(null)
@@ -103,6 +105,7 @@ export function TransactionForm({
 
   return (
     <form action={onSubmit} className="grid gap-3">
+      {lockKind ? null : (
       <div className="flex gap-2 overflow-x-auto pb-1">
         {kinds.map((item) => (
           <button
@@ -110,13 +113,14 @@ export function TransactionForm({
             type="button"
             onClick={() => setKind(item)}
             className={`h-10 shrink-0 rounded-full px-3 text-sm ${
-              kind === item ? "bg-[#17243c] text-white" : "bg-[#eef2f7] text-[#3d4d66]"
+              kind === item ? "bg-foreground text-white" : "bg-secondary text-muted-foreground"
             }`}
           >
             {transactionKindLabels[item]}
           </button>
         ))}
       </div>
+      )}
       <div className="grid gap-2">
         <Label htmlFor="amount">Valor</Label>
         <Input
