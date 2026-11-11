@@ -1,4 +1,5 @@
 -- Fase 3: Free lifetime, Premium capabilities, account visuals, receipts prep.
+-- Runs after 0005_stabilization.sql. Replaces paid-only can_write_finance() with Free write access.
 -- Additive and idempotent. Does not drop finance data or relax owner isolation.
 
 do $$ begin
@@ -77,7 +78,6 @@ create index if not exists transaction_receipts_user_idx
 
 alter table public.transaction_receipts enable row level security;
 
--- Internal RPCs must not be callable by clients even if a previous environment granted them.
 do $$ begin
   revoke all on function public.write_audit(text, text, uuid, jsonb, jsonb, text, jsonb) from public, anon, authenticated;
 exception when undefined_function then null;
@@ -88,6 +88,7 @@ do $$ begin
 exception when undefined_function then null;
 end $$;
 
+-- Free users (enabled, not subscription-suspended) can write. Paid access is no longer required.
 create or replace function public.can_write_finance()
 returns boolean
 language sql
@@ -168,48 +169,3 @@ create policy "receipts_meta_update_own"
   on public.transaction_receipts for update
   using (user_id = auth.uid())
   with check (user_id = auth.uid());
-
--- Split finance policies: owners always read; writes require an enabled, non-suspended account.
-do $$
-declare
-  tbl text;
-begin
-  foreach tbl in array array[
-    'financial_cycles',
-    'financial_accounts',
-    'financial_categories',
-    'financial_budgets',
-    'financial_transactions',
-    'scheduled_payments',
-    'scheduled_incomes'
-  ]
-  loop
-    execute format('drop policy if exists %I on public.%I', replace(tbl, 'financial_', '') || '_own', tbl);
-    execute format('drop policy if exists %I on public.%I', tbl || '_select_own', tbl);
-    execute format('drop policy if exists %I on public.%I', tbl || '_write_own', tbl);
-    execute format('drop policy if exists %I on public.%I', tbl || '_insert_own', tbl);
-    execute format('drop policy if exists %I on public.%I', tbl || '_update_own', tbl);
-    execute format('drop policy if exists %I on public.%I', tbl || '_delete_own', tbl);
-
-    execute format(
-      'create policy %I on public.%I for select using (user_id = auth.uid())',
-      tbl || '_select_own',
-      tbl
-    );
-    execute format(
-      'create policy %I on public.%I for insert with check (user_id = auth.uid() and public.can_write_finance())',
-      tbl || '_insert_own',
-      tbl
-    );
-    execute format(
-      'create policy %I on public.%I for update using (user_id = auth.uid() and public.can_write_finance()) with check (user_id = auth.uid() and public.can_write_finance())',
-      tbl || '_update_own',
-      tbl
-    );
-    execute format(
-      'create policy %I on public.%I for delete using (user_id = auth.uid() and public.can_write_finance())',
-      tbl || '_delete_own',
-      tbl
-    );
-  end loop;
-end $$;
