@@ -11,9 +11,11 @@ import type {
   FinancialTransaction,
   InAppNotification,
   ScheduledPayment,
+  TransactionStatus,
 } from "@/types/database"
 
 export const CYCLE_COOKIE = "planeador.cycle"
+export const TRANSACTION_PAGE_SIZE = 1000
 
 export async function getPreferredCycleId() {
   const store = await cookies()
@@ -78,17 +80,22 @@ export async function listBudgets(userId: string, cycleId: string) {
   return (data as FinancialBudget[]) ?? []
 }
 
-export async function listTransactions(
+type TransactionFilters = {
+  cycleId?: string
+  accountId?: string
+  categoryId?: string
+  kind?: string
+  from?: string
+  to?: string
+  status?: TransactionStatus
+  limit?: number
+}
+
+async function fetchTransactionPage(
   userId: string,
-  filters: {
-    cycleId?: string
-    accountId?: string
-    categoryId?: string
-    kind?: string
-    from?: string
-    to?: string
-    limit?: number
-  } = {}
+  filters: TransactionFilters,
+  from: number,
+  to: number
 ) {
   const supabase = await requireSupabase()
   let query = supabase
@@ -97,6 +104,7 @@ export async function listTransactions(
     .eq("user_id", userId)
     .order("occurred_on", { ascending: false })
     .order("created_at", { ascending: false })
+    .range(from, to)
 
   if (filters.cycleId) query = query.eq("cycle_id", filters.cycleId)
   if (filters.accountId) query = query.eq("account_id", filters.accountId)
@@ -104,11 +112,28 @@ export async function listTransactions(
   if (filters.kind) query = query.eq("kind", filters.kind)
   if (filters.from) query = query.gte("occurred_on", filters.from)
   if (filters.to) query = query.lte("occurred_on", filters.to)
-  if (filters.limit) query = query.limit(filters.limit)
+  if (filters.status) query = query.eq("status", filters.status)
 
   const { data, error } = await query
   if (error) throw new Error(error.message)
   return (data as FinancialTransaction[]) ?? []
+}
+
+export async function listTransactions(userId: string, filters: TransactionFilters = {}) {
+  const rows: FinancialTransaction[] = []
+  let from = 0
+  const maxRows = filters.limit ?? Number.POSITIVE_INFINITY
+
+  while (rows.length < maxRows) {
+    const remaining = maxRows - rows.length
+    const pageSize = Math.min(TRANSACTION_PAGE_SIZE, remaining)
+    const page = await fetchTransactionPage(userId, filters, from, from + pageSize - 1)
+    rows.push(...page)
+    if (page.length < pageSize) break
+    from += page.length
+  }
+
+  return rows
 }
 
 export async function listScheduledPayments(userId: string, cycleId?: string) {
@@ -136,34 +161,8 @@ export async function listNotifications(userId: string) {
   return (data as InAppNotification[]) ?? []
 }
 
-export const TRANSACTION_PAGE_SIZE = 1000
-
-export async function listAllTransactions(userId: string) {
-  const rows: FinancialTransaction[] = []
-  let from = 0
-
-  while (true) {
-    const supabase = await requireSupabase()
-    const to = from + TRANSACTION_PAGE_SIZE - 1
-    const { data, error } = await supabase
-      .from("financial_transactions")
-      .select("*")
-      .eq("user_id", userId)
-      .order("occurred_on", { ascending: false })
-      .order("created_at", { ascending: false })
-      .range(from, to)
-    if (error) throw new Error(error.message)
-    const page = (data as FinancialTransaction[]) ?? []
-    rows.push(...page)
-    if (page.length < TRANSACTION_PAGE_SIZE) break
-    from += TRANSACTION_PAGE_SIZE
-  }
-
-  return rows
-}
-
-export async function getFinanceBootstrap(userId: string) {
-  const [cycles, accounts, categories, notifications, preferredCycleId, ledgerTransactions] = await Promise.all([
+export async function getFinanceShell(userId: string) {
+  const [cycles, accounts, categories, notifications, preferredCycleId] = await Promise.all([
     listCycles(userId),
     listAccounts(userId),
     listCategories(userId),
@@ -172,24 +171,33 @@ export async function getFinanceBootstrap(userId: string) {
     listAllTransactions(userId),
   ])
   const cycle = resolveActiveCycle(cycles, preferredCycleId)
-  const [budgets, scheduledPayments] = cycle
-    ? await Promise.all([listBudgets(userId, cycle.id), listScheduledPayments(userId, cycle.id)])
-    : [[], []]
-
-  const transactions = cycle
-    ? ledgerTransactions.filter((item) => item.cycle_id === cycle.id)
-    : []
 
   return {
     cycles,
     cycle,
     accounts,
     categories,
-    budgets,
-    transactions,
-    ledgerTransactions,
-    scheduledPayments,
     notifications,
     unreadNotifications: notifications.filter((item) => !item.read_at).length,
+  }
+}
+
+export async function getFinanceBootstrap(userId: string) {
+  const shell = await getFinanceShell(userId)
+  const cycle = shell.cycle
+  const [budgets, cycleTransactions, scheduledPayments, ledgerTransactions] = await Promise.all([
+    cycle ? listBudgets(userId, cycle.id) : Promise.resolve([] as FinancialBudget[]),
+    cycle ? listTransactions(userId, { cycleId: cycle.id }) : Promise.resolve([] as FinancialTransaction[]),
+    cycle ? listScheduledPayments(userId, cycle.id) : Promise.resolve([] as ScheduledPayment[]),
+    listTransactions(userId, { status: "posted" }),
+  ])
+
+  return {
+    ...shell,
+    budgets,
+    scheduledPayments,
+    cycleTransactions,
+    ledgerTransactions,
+    transactions: cycleTransactions.slice(0, 80),
   }
 }

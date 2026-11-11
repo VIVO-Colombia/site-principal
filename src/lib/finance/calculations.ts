@@ -11,6 +11,14 @@ import type {
 
 const outflowKinds: TransactionKind[] = ["expense", "savings_contribution", "debt_payment"]
 
+const kindsByGroup: Record<CategoryGroup, TransactionKind[]> = {
+  income: ["income"],
+  scheduled_payment: ["expense", "debt_payment", "savings_contribution"],
+  expense: ["expense"],
+  savings: ["savings_contribution"],
+  debt: ["debt_payment"],
+}
+
 export type AccountBalance = {
   accountId: string
   name: string
@@ -91,59 +99,58 @@ export type BudgetRow = {
   percent: number
 }
 
+export function resolveBudgetCategoryId(
+  transaction: Pick<FinancialTransaction, "category_id" | "scheduled_payment_id" | "kind">,
+  paymentsById: Map<string, Pick<ScheduledPayment, "id" | "category_id">>
+): string | null {
+  if (transaction.kind === "transfer") return null
+  if (transaction.scheduled_payment_id) {
+    const payment = paymentsById.get(transaction.scheduled_payment_id)
+    return payment?.category_id ?? transaction.category_id ?? null
+  }
+  return transaction.category_id ?? null
+}
+
 export function computeBudgetRows(
   categories: FinancialCategory[],
   budgets: FinancialBudget[],
-  transactions: Pick<FinancialTransaction, "category_id" | "kind" | "amount" | "status">[],
-  scheduledPayments: Pick<ScheduledPayment, "category_id" | "paid_amount" | "status">[] = []
+  transactions: Pick<
+    FinancialTransaction,
+    "category_id" | "kind" | "amount" | "status" | "scheduled_payment_id"
+  >[],
+  scheduledPayments: Pick<ScheduledPayment, "id" | "category_id" | "paid_amount" | "status">[] = []
 ): BudgetRow[] {
   const posted = transactions.filter((item) => item.status === "posted")
+  const paymentsById = new Map(scheduledPayments.map((item) => [item.id, item]))
+  const budgetByCategory = new Map(budgets.map((item) => [item.category_id, item]))
+  const categoriesById = new Map(categories.map((item) => [item.id, item]))
 
-  return categories
-    .filter((category) => category.is_active)
+  const visibleIds = new Set<string>()
+  for (const category of categories) {
+    if (category.is_active) visibleIds.add(category.id)
+  }
+  for (const budget of budgets) {
+    visibleIds.add(budget.category_id)
+  }
+
+  const executedByCategory = new Map<string, number>()
+  for (const tx of posted) {
+    const categoryId = resolveBudgetCategoryId(tx, paymentsById)
+    if (!categoryId) continue
+    const category = categoriesById.get(categoryId)
+    if (!category) continue
+    if (!kindsByGroup[category.group_code].includes(tx.kind)) continue
+    executedByCategory.set(categoryId, addAmounts(executedByCategory.get(categoryId), tx.amount))
+    visibleIds.add(categoryId)
+  }
+
+  return [...visibleIds]
+    .map((categoryId) => categoriesById.get(categoryId))
+    .filter((category): category is FinancialCategory => Boolean(category))
     .sort((a, b) => a.sort_order - b.sort_order || a.name.localeCompare(b.name, "es"))
     .map((category) => {
-      const planned = toAmount(
-        budgets.find((item) => item.category_id === category.id)?.planned_amount
-      )
-
-      let executed = 0
-      if (category.group_code === "income") {
-        executed = addAmounts(
-          ...posted
-            .filter((item) => item.category_id === category.id && item.kind === "income")
-            .map((item) => item.amount)
-        )
-      } else if (category.group_code === "scheduled_payment") {
-        const fromCommitments = addAmounts(
-          ...scheduledPayments
-            .filter((item) => item.category_id === category.id && item.status !== "cancelled")
-            .map((item) => item.paid_amount)
-        )
-        const fromTransactions = addAmounts(
-          ...posted
-            .filter(
-              (item) =>
-                item.category_id === category.id &&
-                (item.kind === "expense" || item.kind === "debt_payment")
-            )
-            .map((item) => item.amount)
-        )
-        executed = Math.max(fromCommitments, fromTransactions)
-      } else {
-        const kinds: TransactionKind[] =
-          category.group_code === "savings"
-            ? ["savings_contribution"]
-            : category.group_code === "debt"
-              ? ["debt_payment"]
-              : ["expense"]
-        executed = addAmounts(
-          ...posted
-            .filter((item) => item.category_id === category.id && kinds.includes(item.kind))
-            .map((item) => item.amount)
-        )
-      }
-
+      const planned = toAmount(budgetByCategory.get(category.id)?.planned_amount)
+      const executed = toAmount(executedByCategory.get(category.id))
       const difference = addAmounts(planned, -executed)
       return {
         categoryId: category.id,

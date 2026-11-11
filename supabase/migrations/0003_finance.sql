@@ -190,10 +190,34 @@ begin
         raise exception 'La categoría no pertenece al usuario';
       end if;
     end if;
+    if new.scheduled_payment_id is not null then
+      select user_id into owner from public.scheduled_payments where id = new.scheduled_payment_id;
+      if owner is distinct from new.user_id then
+        raise exception 'El compromiso no pertenece al usuario';
+      end if;
+    end if;
+    if new.scheduled_income_id is not null then
+      select user_id into owner from public.scheduled_incomes where id = new.scheduled_income_id;
+      if owner is distinct from new.user_id then
+        raise exception 'El ingreso programado no pertenece al usuario';
+      end if;
+    end if;
   elsif tg_table_name in ('scheduled_payments', 'scheduled_incomes') then
     select user_id into owner from public.financial_cycles where id = new.cycle_id;
     if owner is distinct from new.user_id then
       raise exception 'El compromiso debe pertenecer al dueño del ciclo';
+    end if;
+    if new.category_id is not null then
+      select user_id into owner from public.financial_categories where id = new.category_id;
+      if owner is distinct from new.user_id then
+        raise exception 'La categoría no pertenece al usuario';
+      end if;
+    end if;
+    if new.preferred_account_id is not null then
+      select user_id into owner from public.financial_accounts where id = new.preferred_account_id;
+      if owner is distinct from new.user_id then
+        raise exception 'La cuenta preferida no pertenece al usuario';
+      end if;
     end if;
   end if;
   return new;
@@ -289,31 +313,119 @@ returns trigger
 language plpgsql
 as $$
 declare
+  payment_id uuid;
+  income_id uuid;
   paid numeric(14,2);
   expected numeric(14,2);
   due date;
+  current_status public.commitment_status;
 begin
-  if new.scheduled_payment_id is not null then
+  if tg_op = 'DELETE' then
+    payment_id := old.scheduled_payment_id;
+    income_id := old.scheduled_income_id;
+  else
+    payment_id := new.scheduled_payment_id;
+    income_id := new.scheduled_income_id;
+    if tg_op = 'UPDATE' then
+      if old.scheduled_payment_id is distinct from new.scheduled_payment_id then
+        payment_id := new.scheduled_payment_id;
+        -- Recompute the previous commitment before the new one.
+        if old.scheduled_payment_id is not null then
+          select coalesce(sum(amount), 0) into paid
+          from public.financial_transactions
+          where scheduled_payment_id = old.scheduled_payment_id
+            and status = 'posted'
+            and kind in ('expense', 'debt_payment', 'savings_contribution');
+          select expected_amount, due_on, status into expected, due, current_status
+          from public.scheduled_payments
+          where id = old.scheduled_payment_id;
+          if expected is not null and current_status is distinct from 'cancelled' then
+            update public.scheduled_payments
+            set
+              paid_amount = paid,
+              status = case
+                when paid >= expected then 'paid'::public.commitment_status
+                when paid > 0 then 'partial'::public.commitment_status
+                when due < current_date then 'overdue'::public.commitment_status
+                else 'pending'::public.commitment_status
+              end
+            where id = old.scheduled_payment_id;
+          end if;
+        end if;
+      end if;
+      if old.scheduled_income_id is distinct from new.scheduled_income_id and old.scheduled_income_id is not null then
+        select coalesce(sum(amount), 0) into paid
+        from public.financial_transactions
+        where scheduled_income_id = old.scheduled_income_id
+          and status = 'posted'
+          and kind = 'income';
+        select expected_amount, due_on, status into expected, due, current_status
+        from public.scheduled_incomes
+        where id = old.scheduled_income_id;
+        if expected is not null and current_status is distinct from 'cancelled' then
+          update public.scheduled_incomes
+          set
+            received_amount = paid,
+            status = case
+              when paid >= expected then 'paid'::public.commitment_status
+              when paid > 0 then 'partial'::public.commitment_status
+              when due < current_date then 'overdue'::public.commitment_status
+              else 'pending'::public.commitment_status
+            end
+          where id = old.scheduled_income_id;
+        end if;
+      end if;
+    end if;
+  end if;
+
+  if payment_id is not null then
     select coalesce(sum(amount), 0) into paid
     from public.financial_transactions
-    where scheduled_payment_id = new.scheduled_payment_id
+    where scheduled_payment_id = payment_id
       and status = 'posted'
       and kind in ('expense', 'debt_payment', 'savings_contribution');
-
-    select expected_amount, due_on into expected, due
+    select expected_amount, due_on, status into expected, due, current_status
     from public.scheduled_payments
-    where id = new.scheduled_payment_id;
+    where id = payment_id;
+    if expected is not null and current_status is distinct from 'cancelled' then
+      update public.scheduled_payments
+      set
+        paid_amount = paid,
+        status = case
+          when paid >= expected then 'paid'::public.commitment_status
+          when paid > 0 then 'partial'::public.commitment_status
+          when due < current_date then 'overdue'::public.commitment_status
+          else 'pending'::public.commitment_status
+        end
+      where id = payment_id;
+    end if;
+  end if;
 
-    update public.scheduled_payments
-    set
-      paid_amount = paid,
-      status = case
-        when paid >= expected then 'paid'::public.commitment_status
-        when paid > 0 then 'partial'::public.commitment_status
-        when due < current_date then 'overdue'::public.commitment_status
-        else 'pending'::public.commitment_status
-      end
-    where id = new.scheduled_payment_id;
+  if income_id is not null then
+    select coalesce(sum(amount), 0) into paid
+    from public.financial_transactions
+    where scheduled_income_id = income_id
+      and status = 'posted'
+      and kind = 'income';
+    select expected_amount, due_on, status into expected, due, current_status
+    from public.scheduled_incomes
+    where id = income_id;
+    if expected is not null and current_status is distinct from 'cancelled' then
+      update public.scheduled_incomes
+      set
+        received_amount = paid,
+        status = case
+          when paid >= expected then 'paid'::public.commitment_status
+          when paid > 0 then 'partial'::public.commitment_status
+          when due < current_date then 'overdue'::public.commitment_status
+          else 'pending'::public.commitment_status
+        end
+      where id = income_id;
+    end if;
+  end if;
+
+  if tg_op = 'DELETE' then
+    return old;
   end if;
   return new;
 end;
@@ -321,7 +433,7 @@ $$;
 
 drop trigger if exists tx_refresh_commitment on public.financial_transactions;
 create trigger tx_refresh_commitment
-  after insert or update on public.financial_transactions
+  after insert or update or delete on public.financial_transactions
   for each row execute function public.refresh_commitment_status();
 
 create index if not exists financial_cycles_user_idx on public.financial_cycles (user_id, starts_on desc);
@@ -332,3 +444,5 @@ create index if not exists financial_tx_cycle_idx on public.financial_transactio
 create index if not exists scheduled_payments_due_idx on public.scheduled_payments (user_id, due_on);
 
 grant execute on function public.seed_default_categories(uuid) to authenticated;
+revoke all on function public.assert_same_owner() from public, anon, authenticated;
+revoke all on function public.refresh_commitment_status() from public, anon, authenticated;

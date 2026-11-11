@@ -28,9 +28,12 @@ Aplica las migraciones de `supabase/migrations` en el SQL Editor (ver `supabase/
 npm run dev
 npm run lint
 npm run test
+npm run test:sql
 npm run build
 npm start
 ```
+
+`npm run test:sql` crea una base Postgres local aislada, aplica 0001-0005 y recorre dos usuarios, un Super Admin y cuentas vencida/suspendida/sin plan. No usa datos productivos.
 
 ## Variables de entorno
 

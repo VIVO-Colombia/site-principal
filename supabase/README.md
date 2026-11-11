@@ -14,8 +14,15 @@ Ejecuta en el SQL Editor, **en este orden**:
 2. `migrations/0002_admin_functions.sql`
 3. `migrations/0003_finance.sql`
 4. `migrations/0004_rls.sql`
+5. `migrations/0005_stabilization.sql`
+
+`0005_stabilization.sql` es aditiva e idempotente: no borra tablas ni reescribe datos. Hay que aplicarla en bases que ya corrieron 0001-0004.
 
 `schema.sql` queda como referencia de la fase 1. No lo ejecutes encima de las migraciones versionadas.
+
+Funciones internas (`write_audit`, `activate_or_renew_subscription`, triggers) no tienen `EXECUTE` para `anon` ni `authenticated`. El RPC público se limita a `is_super_admin`, `can_write_finance`, `seed_default_categories` y las funciones `admin_*` que ya comprueban Super Admin.
+
+Las escrituras financieras vía cliente Supabase exigen cuenta habilitada y suscripción vigente (o Super Admin). Una suscripción vencida conserva `SELECT` y la exportación CSV.
 
 ## 3. Autenticación
 

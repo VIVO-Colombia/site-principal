@@ -505,3 +505,11 @@ grant execute on function public.admin_reject_payment_request(uuid, text) to aut
 grant execute on function public.admin_grant_trial(uuid, uuid, timestamptz, timestamptz, text) to authenticated;
 grant execute on function public.admin_set_subscription_status(uuid, public.subscription_status, text) to authenticated;
 grant execute on function public.admin_extend_subscription(uuid, integer, text) to authenticated;
+
+-- Internal helpers must not be callable via PostgREST/RPC.
+revoke all on function public.write_audit(text, text, uuid, jsonb, jsonb, text, jsonb) from public, anon, authenticated;
+revoke all on function public.activate_or_renew_subscription(uuid, public.plans, public.subscription_source, timestamptz, text) from public, anon, authenticated;
+revoke all on function public.snapshot_plan(public.plans) from public, anon, authenticated;
+revoke all on function public.set_updated_at() from public, anon, authenticated;
+revoke all on function public.handle_new_user() from public, anon, authenticated;
+revoke all on function public.prevent_profile_privilege_escalation() from public, anon, authenticated;

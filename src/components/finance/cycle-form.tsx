@@ -88,7 +88,8 @@ export function CycleForm({
             ))}
           </select>
           <p className="text-xs text-[#5b6b82]">
-            Copia presupuestos y compromisos. No copia ingresos, gastos ni transferencias.
+            Copia presupuestos y compromisos. Las fechas de vencimiento se desplazan al nuevo ciclo. No copia
+            ingresos, gastos ni transferencias.
           </p>
         </div>
       ) : null}
