@@ -4,21 +4,26 @@ import { useState } from "react"
 import { useRouter } from "next/navigation"
 
 import { completeOnboardingAction, createCycleAction, upsertAccountAction } from "@/app/actions/finance"
+import { PayScheduleForm } from "@/components/finance/pay-schedule-form"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { accountKindLabels } from "@/lib/finance/labels"
-import type { AccountKind, FinancialCycle } from "@/types/database"
+import { addDays, calendarDateInTimeZone } from "@/lib/finance/pay-periods"
+import type { AccountKind, FinancialAccount, FinancialCycle } from "@/types/database"
 
 export function OnboardingFlow({
   cycles,
+  accounts,
   hasAccounts,
 }: {
   cycles: FinancialCycle[]
+  accounts: Pick<FinancialAccount, "id" | "name">[]
   hasAccounts: boolean
 }) {
   const router = useRouter()
   const [step, setStep] = useState(1)
+  const [manualCycle, setManualCycle] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [pending, setPending] = useState(false)
 
@@ -100,7 +105,7 @@ export function OnboardingFlow({
               Continuar
             </Button>
           </>
-        ) : (
+        ) : manualCycle ? (
           <form
             className="mt-3 grid gap-3"
             action={async (formData) => {
@@ -123,12 +128,12 @@ export function OnboardingFlow({
             <h2 className="font-heading text-2xl">Tu ciclo</h2>
             <Input name="name" required defaultValue="Este periodo" className="h-11 rounded-full" />
             <div className="grid grid-cols-2 gap-2">
-              <Input name="startsOn" type="date" required defaultValue={new Date().toISOString().slice(0, 10)} className="h-11 rounded-full" />
+              <Input name="startsOn" type="date" required defaultValue={calendarDateInTimeZone("America/Bogota")} className="h-11 rounded-full" />
               <Input
                 name="endsOn"
                 type="date"
                 required
-                defaultValue={new Date(Date.now() + 29 * 86400000).toISOString().slice(0, 10)}
+                defaultValue={addDays(calendarDateInTimeZone("America/Bogota"), 29)}
                 className="h-11 rounded-full"
               />
             </div>
@@ -136,7 +141,24 @@ export function OnboardingFlow({
             <Button className="h-11 rounded-full" disabled={pending}>
               Crear ciclo
             </Button>
+            <button type="button" className="min-h-11 text-sm text-[#777a80]" onClick={() => setManualCycle(false)}>
+              Volver a la fecha de pago
+            </button>
           </form>
+        ) : (
+          <div className="mt-3 grid gap-3">
+            <PayScheduleForm
+              accounts={accounts}
+              submitLabel="Crear mis periodos"
+              onDone={() => {
+                setStep(4)
+                router.refresh()
+              }}
+            />
+            <button type="button" className="min-h-11 text-sm text-[#777a80]" onClick={() => setManualCycle(true)}>
+              Prefiero escribir las fechas
+            </button>
+          </div>
         )
       ) : null}
 

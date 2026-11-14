@@ -136,6 +136,18 @@ export async function listTransactions(userId: string, filters: TransactionFilte
   return rows
 }
 
+export async function listOpenCommitments(userId: string) {
+  const supabase = await requireSupabase()
+  const { data, error } = await supabase
+    .from("scheduled_payments")
+    .select("*")
+    .eq("user_id", userId)
+    .in("status", ["pending", "partial", "overdue"])
+    .order("due_on", { ascending: true })
+  if (error) throw new Error(error.message)
+  return (data as ScheduledPayment[]) ?? []
+}
+
 export async function listScheduledPayments(userId: string, cycleId?: string) {
   const supabase = await requireSupabase()
   let query = supabase
@@ -184,17 +196,19 @@ export async function getFinanceShell(userId: string) {
 export async function getFinanceBootstrap(userId: string) {
   const shell = await getFinanceShell(userId)
   const cycle = shell.cycle
-  const [budgets, cycleTransactions, scheduledPayments, ledgerTransactions] = await Promise.all([
+  const [budgets, cycleTransactions, scheduledPayments, ledgerTransactions, openCommitments] = await Promise.all([
     cycle ? listBudgets(userId, cycle.id) : Promise.resolve([] as FinancialBudget[]),
     cycle ? listTransactions(userId, { cycleId: cycle.id }) : Promise.resolve([] as FinancialTransaction[]),
     cycle ? listScheduledPayments(userId, cycle.id) : Promise.resolve([] as ScheduledPayment[]),
     listTransactions(userId, { status: "posted" }),
+    listOpenCommitments(userId),
   ])
 
   return {
     ...shell,
     budgets,
     scheduledPayments,
+    openCommitments,
     cycleTransactions,
     ledgerTransactions,
     transactions: cycleTransactions,

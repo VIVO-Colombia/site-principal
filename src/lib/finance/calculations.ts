@@ -164,6 +164,37 @@ export function computeBudgetRows(
     })
 }
 
+/**
+ * Money that can be spent without touching obligations.
+ * Included balances already contain reserved savings, so those funds are removed once.
+ * Expected income is not an input: it must not increase today's balance.
+ */
+export function computeSpendable(input: {
+  balances: AccountBalance[]
+  commitments: Pick<ScheduledPayment, "expected_amount" | "paid_amount" | "status" | "due_on">[]
+  throughDate: string
+}) {
+  const active = input.balances.filter((item) => item.isActive && item.includeInTotal !== false)
+  const included = addAmounts(...active.map((item) => item.balance))
+  const reserved = addAmounts(
+    ...active.filter((item) => item.kind === "savings" && item.balance > 0).map((item) => item.balance)
+  )
+  const commitments = addAmounts(
+    ...input.commitments
+      .filter((item) => item.status !== "paid" && item.status !== "cancelled" && item.due_on <= input.throughDate)
+      .map((item) => {
+        const remaining = addAmounts(toAmount(item.expected_amount), -toAmount(item.paid_amount))
+        return remaining > 0 ? remaining : 0
+      })
+  )
+  return {
+    included,
+    reserved,
+    commitments,
+    spendable: addAmounts(included, -reserved, -commitments),
+  }
+}
+
 export function computeAvailableToBudget(incomes: number, budgetRows: BudgetRow[]) {
   const assigned = addAmounts(
     ...budgetRows.filter((row) => row.group !== "income").map((row) => row.planned)

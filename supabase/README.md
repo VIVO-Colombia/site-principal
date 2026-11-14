@@ -15,14 +15,16 @@ Ejecuta en el SQL Editor, **en este orden**:
 3. `migrations/0003_finance.sql`
 4. `migrations/0004_rls.sql`
 5. `migrations/0005_stabilization.sql`
+6. `migrations/0006_free_premium_home.sql`
+7. `migrations/0007_pay_schedule_and_account_columns.sql`
 
-`0005_stabilization.sql` es aditiva e idempotente: no borra tablas ni reescribe datos. Hay que aplicarla en bases que ya corrieron 0001-0004.
+`0005`, `0006` y `0007` son aditivas: no borran tablas ni reescriben ciclos ya creados. En una base que ya está en producción, ejecuta las que falten y deja que `0007` termine: recarga la caché de la API. Sin esa caché, crear una cuenta falla con `Could not find the 'color' column of 'financial_accounts'`.
 
 `schema.sql` queda como referencia de la fase 1. No lo ejecutes encima de las migraciones versionadas.
 
 Funciones internas (`write_audit`, `activate_or_renew_subscription`, triggers) no tienen `EXECUTE` para `anon` ni `authenticated`. El RPC público se limita a `is_super_admin`, `can_write_finance`, `seed_default_categories` y las funciones `admin_*` que ya comprueban Super Admin.
 
-Las escrituras financieras vía cliente Supabase exigen cuenta habilitada y suscripción vigente (o Super Admin). Una suscripción vencida conserva `SELECT` y la exportación CSV.
+Desde `0006`, una cuenta habilitada y sin suscripción suspendida puede escribir sus finanzas. El plan Free no exige suscripción de pago.
 
 ## 3. Autenticación
 

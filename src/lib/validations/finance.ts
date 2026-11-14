@@ -2,6 +2,60 @@ import { z } from "zod"
 
 const amountString = z.string().trim().min(1, "Ingresa un valor")
 
+const optionalDay = z.preprocess(
+  (value) => (value === "" || value == null ? undefined : value),
+  z.coerce.number().int().min(1).max(31).optional()
+)
+
+const optionalInterval = z.preprocess(
+  (value) => (value === "" || value == null ? undefined : value),
+  z.coerce.number().int().min(2).max(366).optional()
+)
+
+export const payScheduleSchema = z
+  .object({
+    frequency: z.enum(["monthly", "semimonthly", "every_n_days"]),
+    payDay: optionalDay,
+    payDay2: optionalDay,
+    intervalDays: optionalInterval,
+    anchorDate: z.preprocess(
+      (value) => (value === "" || value == null ? undefined : value),
+      z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Indica la fecha del pago").optional()
+    ),
+    expectedAmount: z.preprocess(
+      (value) => (value == null ? "" : value),
+      z.string().trim().optional()
+    ),
+    accountId: z.preprocess(
+      (value) => (value === "" || value == null ? undefined : value),
+      z.string().uuid().optional()
+    ),
+    variable: z.preprocess(
+      (value) => (value == null ? "" : value),
+      z.enum(["true", "false", "on", ""]).optional()
+    ),
+  })
+  .superRefine((value, context) => {
+    if (value.frequency === "monthly" && !value.payDay) {
+      context.addIssue({ code: "custom", message: "Indica el día de pago", path: ["payDay"] })
+    }
+    if (value.frequency === "semimonthly") {
+      if (!value.payDay || !value.payDay2) {
+        context.addIssue({ code: "custom", message: "Indica las dos fechas de pago", path: ["payDay"] })
+      } else if (value.payDay === value.payDay2) {
+        context.addIssue({ code: "custom", message: "Las dos fechas deben ser distintas", path: ["payDay2"] })
+      }
+    }
+    if (value.frequency === "every_n_days") {
+      if (!value.intervalDays) {
+        context.addIssue({ code: "custom", message: "Indica cada cuántos días te pagan", path: ["intervalDays"] })
+      }
+      if (!value.anchorDate) {
+        context.addIssue({ code: "custom", message: "Indica la fecha de un pago", path: ["anchorDate"] })
+      }
+    }
+  })
+
 export const cycleSchema = z.object({
   name: z.string().trim().min(2, "Ingresa un nombre").max(80),
   startsOn: z.string().min(1, "Indica la fecha de inicio"),
