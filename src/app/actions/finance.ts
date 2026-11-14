@@ -3,20 +3,113 @@
 import { revalidatePath } from "next/cache"
 import { cookies } from "next/headers"
 
-import { requireAppAccess, requireWritableAppAccess } from "@/lib/auth/access"
+import { requireWritableAppAccess } from "@/lib/auth/access"
 import { actionError, type ActionResult } from "@/lib/action-result"
 import { shiftDueOn } from "@/lib/finance/cycle-dates"
 import { parseAmountInput, toAmount } from "@/lib/finance/money"
+import {
+  calendarDateInTimeZone,
+  cyclesToCreate,
+  periodsFrom,
+  type PayScheduleInput,
+} from "@/lib/finance/pay-periods"
 import { CYCLE_COOKIE } from "@/lib/finance/queries"
+import { isMissingTable, omitUnknownColumn } from "@/lib/finance/schema-cache"
 import { requireSupabase } from "@/lib/supabase/require"
 import {
   accountSchema,
   budgetSchema,
   categorySchema,
   cycleSchema,
+  payScheduleSchema,
   scheduledPaymentSchema,
   transactionSchema,
 } from "@/lib/validations/finance"
+
+const ACCOUNT_OPTIONAL_COLUMNS = ["color", "icon", "include_in_total"] as const
+const CYCLE_OPTIONAL_COLUMNS = ["source_schedule_id"] as const
+
+type FinanceClient = Awaited<ReturnType<typeof requireSupabase>>
+
+async function insertRow(
+  supabase: FinanceClient,
+  table: "financial_accounts" | "financial_cycles" | "income_schedules" | "scheduled_incomes",
+  row: Record<string, unknown>,
+  optional: readonly string[]
+) {
+  let payload = { ...row }
+  for (let attempt = 0; attempt <= optional.length; attempt += 1) {
+    const { data, error } = await supabase.from(table).insert(payload).select("id").single()
+    if (!error) return { id: String(data.id), error: null as string | null }
+    const next = omitUnknownColumn(payload, error.message, optional)
+    if (!next) return { id: null as string | null, error: error.message }
+    payload = next
+  }
+  return { id: null as string | null, error: "No pudimos guardar el registro." }
+}
+
+async function updateRow(
+  supabase: FinanceClient,
+  table: "financial_accounts",
+  id: string,
+  userId: string,
+  row: Record<string, unknown>,
+  optional: readonly string[]
+) {
+  let payload = { ...row }
+  for (let attempt = 0; attempt <= optional.length; attempt += 1) {
+    const { error } = await supabase.from(table).update(payload).eq("id", id).eq("user_id", userId)
+    if (!error) return null
+    const next = omitUnknownColumn(payload, error.message, optional)
+    if (!next) return error.message
+    payload = next
+  }
+  return "No pudimos guardar el registro."
+}
+
+function accountWriteError(message: string) {
+  if (message.includes("invalid input value for enum account_kind")) {
+    return "Ese tipo de cuenta todavía no está disponible en la base. Elige Efectivo, Cuenta bancaria o Billetera digital."
+  }
+  if (message.includes("schema cache")) {
+    return "No pudimos guardar la cuenta. Intenta de nuevo en un momento."
+  }
+  return message
+}
+
+function optionalAmount(raw: string | undefined) {
+  const trimmed = raw?.trim() ?? ""
+  if (!trimmed || trimmed === "0") return 0
+  return parseAmountInput(trimmed)
+}
+
+function toPaySchedule(
+  data: {
+    frequency: PayScheduleInput["frequency"]
+    payDay?: number
+    payDay2?: number
+    intervalDays?: number
+    anchorDate?: string
+  },
+  today: string
+): PayScheduleInput {
+  if (data.frequency === "monthly") {
+    return { frequency: "monthly", paymentDays: [data.payDay ?? 1], anchorDate: today }
+  }
+  if (data.frequency === "semimonthly") {
+    return {
+      frequency: "semimonthly",
+      paymentDays: [data.payDay ?? 1, data.payDay2 ?? 15],
+      anchorDate: today,
+    }
+  }
+  return {
+    frequency: "every_n_days",
+    paymentDays: [],
+    intervalDays: data.intervalDays,
+    anchorDate: data.anchorDate || today,
+  }
+}
 
 function refreshFinance() {
   revalidatePath("/app")
@@ -156,6 +249,159 @@ export async function createCycleAction(input: unknown): Promise<ActionResult> {
   }
 }
 
+export async function savePayScheduleAction(input: unknown): Promise<ActionResult> {
+  try {
+    const access = await requireWritableAppAccess()
+    const parsed = payScheduleSchema.safeParse(input)
+    if (!parsed.success) return { error: parsed.error.issues[0]?.message }
+
+    const supabase = await requireSupabase()
+    const userId = access.user!.id
+    const today = calendarDateInTimeZone(access.profile?.timezone || "America/Bogota")
+    const schedule = toPaySchedule(parsed.data, today)
+    const periods = periodsFrom(schedule, today, 6)
+    if (periods.length === 0) return { error: "No pudimos calcular los periodos con esa fecha de pago." }
+
+    const expected = optionalAmount(parsed.data.expectedAmount)
+    const accountId = parsed.data.accountId || null
+    if (accountId) {
+      const account = await supabase
+        .from("financial_accounts")
+        .select("id")
+        .eq("id", accountId)
+        .eq("user_id", userId)
+        .maybeSingle()
+      if (account.error) return { error: account.error.message }
+      if (!account.data) return { error: "La cuenta no pertenece a tu usuario." }
+    }
+
+    let scheduleId: string | null = null
+    const cleared = await supabase
+      .from("income_schedules")
+      .update({ is_primary: false })
+      .eq("user_id", userId)
+      .eq("is_primary", true)
+    if (cleared.error && !isMissingTable(cleared.error.message, "income_schedules")) {
+      return { error: cleared.error.message }
+    }
+    if (!cleared.error) {
+      const saved = await insertRow(
+        supabase,
+        "income_schedules",
+        {
+          user_id: userId,
+          name: "Fecha de pago",
+          expected_amount: expected,
+          frequency: schedule.frequency,
+          payment_days: schedule.paymentDays,
+          interval_days: schedule.intervalDays ?? null,
+          anchor_date: schedule.anchorDate,
+          account_id: accountId,
+          is_primary: true,
+          is_variable: parsed.data.variable === "true" || parsed.data.variable === "on",
+          active: true,
+        },
+        []
+      )
+      if (saved.error && !isMissingTable(saved.error, "income_schedules")) return { error: saved.error }
+      scheduleId = saved.id
+    }
+
+    const existing = await supabase
+      .from("financial_cycles")
+      .select("id, starts_on, ends_on")
+      .eq("user_id", userId)
+    if (existing.error) return { error: existing.error.message }
+    const currentCycles = existing.data ?? []
+    const fresh = cyclesToCreate(
+      currentCycles.map((cycle) => ({ startsOn: cycle.starts_on, endsOn: cycle.ends_on })),
+      periods
+    )
+
+    const created: { id: string; startsOn: string; endsOn: string }[] = []
+    for (const period of fresh) {
+      const inserted = await insertRow(
+        supabase,
+        "financial_cycles",
+        {
+          user_id: userId,
+          name: period.label,
+          starts_on: period.startsOn,
+          ends_on: period.endsOn,
+          status: "open",
+          notes: "Generado con la fecha de pago. Los ciclos anteriores conservan sus fechas.",
+          source_schedule_id: scheduleId,
+        },
+        CYCLE_OPTIONAL_COLUMNS
+      )
+      if (inserted.error) {
+        if (inserted.error.includes("financial_cycles_no_overlap")) continue
+        return { error: inserted.error }
+      }
+      if (inserted.id) created.push({ id: inserted.id, startsOn: period.startsOn, endsOn: period.endsOn })
+    }
+
+    await supabase.rpc("seed_default_categories", { p_user_id: userId })
+
+    let incomeSaved = false
+    if (expected > 0 && created.length > 0) {
+      const category = await supabase
+        .from("financial_categories")
+        .select("id")
+        .eq("user_id", userId)
+        .eq("group_code", "income")
+        .order("sort_order", { ascending: true })
+        .limit(1)
+        .maybeSingle()
+      const incomeCategoryId = category.data?.id
+      if (!category.error && incomeCategoryId) {
+        const income = await supabase.from("scheduled_incomes").insert(
+          created.map((cycle) => ({
+            user_id: userId,
+            cycle_id: cycle.id,
+            category_id: incomeCategoryId,
+            preferred_account_id: accountId,
+            name: "Ingreso previsto",
+            expected_amount: expected,
+            due_on: cycle.startsOn,
+            received_amount: 0,
+            status: "pending",
+            notes: "Estimado. No aumenta el saldo hasta registrarlo como recibido.",
+          }))
+        )
+        incomeSaved = !income.error
+      }
+    }
+
+    const covering = [
+      ...currentCycles.map((cycle) => ({ id: cycle.id, starts_on: cycle.starts_on, ends_on: cycle.ends_on })),
+      ...created.map((cycle) => ({ id: cycle.id, starts_on: cycle.startsOn, ends_on: cycle.endsOn })),
+    ]
+    const active =
+      covering.find((cycle) => cycle.starts_on <= today && cycle.ends_on >= today) ?? created[0] ?? null
+    if (active) {
+      const store = await cookies()
+      store.set(CYCLE_COOKIE, active.id, { path: "/", sameSite: "lax" })
+    }
+
+    refreshFinance()
+    if (created.length === 0) {
+      return {
+        success: "Conservamos los ciclos que ya tenías. Cambiar la fecha de pago no reescribe sus fechas.",
+      }
+    }
+    return {
+      success:
+        incomeSaved
+          ? `Quedaron ${created.length} periodos según tu fecha de pago. El ingreso estimado no entra al saldo hasta que lo registres.`
+          : `Quedaron ${created.length} periodos según tu fecha de pago.`,
+      id: active && "id" in active ? active.id : undefined,
+    }
+  } catch (error) {
+    return actionError(error, "No pudimos guardar la fecha de pago.")
+  }
+}
+
 export async function updateCycleAction(id: string, input: unknown): Promise<ActionResult> {
   try {
     const access = await requireWritableAppAccess()
@@ -226,37 +472,45 @@ export async function upsertAccountAction(input: unknown): Promise<ActionResult>
       parsed.data.includeInTotal == null
         ? true
         : parsed.data.includeInTotal === "true" || parsed.data.includeInTotal === "on"
-    const extras = {
+    const visuals = {
       color: parsed.data.color || null,
       icon: parsed.data.icon || null,
       include_in_total: includeInTotal,
     }
 
     if (parsed.data.id) {
-      const { error } = await supabase
-        .from("financial_accounts")
-        .update({
+      const error = await updateRow(
+        supabase,
+        "financial_accounts",
+        parsed.data.id,
+        access.user!.id,
+        {
           name: parsed.data.name,
           kind: parsed.data.kind,
           notes: parsed.data.notes || null,
-          ...extras,
-        })
-        .eq("id", parsed.data.id)
-        .eq("user_id", access.user!.id)
-      if (error) return { error: error.message }
+          ...visuals,
+        },
+        ACCOUNT_OPTIONAL_COLUMNS
+      )
+      if (error) return { error: accountWriteError(error) }
       refreshFinance()
       return { success: "Cuenta actualizada." }
     }
 
-    const { error } = await supabase.from("financial_accounts").insert({
-      user_id: access.user!.id,
-      name: parsed.data.name,
-      kind: parsed.data.kind,
-      opening_balance: opening,
-      notes: parsed.data.notes || null,
-      ...extras,
-    })
-    if (error) return { error: error.message }
+    const inserted = await insertRow(
+      supabase,
+      "financial_accounts",
+      {
+        user_id: access.user!.id,
+        name: parsed.data.name,
+        kind: parsed.data.kind,
+        opening_balance: opening,
+        notes: parsed.data.notes || null,
+        ...visuals,
+      },
+      ACCOUNT_OPTIONAL_COLUMNS
+    )
+    if (inserted.error) return { error: accountWriteError(inserted.error) }
     refreshFinance()
     return { success: "Cuenta creada." }
   } catch (error) {

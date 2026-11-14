@@ -6,6 +6,7 @@ import { Bell, Settings } from "lucide-react"
 
 import { AccountForm } from "@/components/finance/account-form"
 import { CycleForm } from "@/components/finance/cycle-form"
+import { PayScheduleForm } from "@/components/finance/pay-schedule-form"
 import { CycleSwitcher } from "@/components/finance/cycle-switcher"
 import { ScheduledPaymentForm } from "@/components/finance/scheduled-payment-form"
 import { TransactionForm } from "@/components/finance/transaction-form"
@@ -40,7 +41,9 @@ import {
   computeIncludedBalance,
   computeAccountBalances,
   computeAvailableToBudget,
+  computeSpendable,
 } from "@/lib/finance/calculations"
+import { calendarDateInTimeZone } from "@/lib/finance/pay-periods"
 import { accountKindLabels } from "@/lib/finance/labels"
 import { formatCop } from "@/lib/format"
 import type {
@@ -65,6 +68,7 @@ export type HomeData = {
   transactions: FinancialTransaction[]
   ledgerTransactions: FinancialTransaction[]
   scheduledPayments: ScheduledPayment[]
+  openCommitments: ScheduledPayment[]
   notifications: InAppNotification[]
   unreadNotifications: number
 }
@@ -114,6 +118,15 @@ export function FinancialHome({
     [data.accounts, data.ledgerTransactions]
   )
   const total = computeIncludedBalance(balances)
+  const today = calendarDateInTimeZone("America/Bogota")
+  const currentCycle =
+    data.cycles.find((cycle) => cycle.status === "open" && cycle.starts_on <= today && cycle.ends_on >= today) ??
+    data.cycle
+  const spendable = computeSpendable({
+    balances,
+    commitments: data.openCommitments,
+    throughDate: currentCycle?.ends_on ?? today,
+  })
   const cycleMetrics = computeCycleMetrics(data.transactions)
   const budgetRows = computeBudgetRows(
     data.categories,
@@ -201,7 +214,11 @@ export function FinancialHome({
 
       {needsOnboarding ? (
         <div className="mt-5">
-          <OnboardingFlow cycles={data.cycles} hasAccounts={data.accounts.length > 0} />
+          <OnboardingFlow
+            cycles={data.cycles}
+            accounts={data.accounts}
+            hasAccounts={data.accounts.length > 0}
+          />
         </div>
       ) : null}
 
@@ -217,8 +234,10 @@ export function FinancialHome({
         </div>
         <dl className="mt-5 grid grid-cols-3 gap-2 text-[11px]">
           <div className="rounded-2xl bg-white/8 px-3 py-2.5">
-            <dt className="text-white/50">Disponible</dt>
-            <dd className="mt-1 text-sm font-medium money">{formatCop(cycleMetrics.cycleBalance)}</dd>
+            <dt className="text-white/50">Para gastar</dt>
+            <dd className={cn("mt-1 text-sm font-medium money", spendable.spendable < 0 && "text-[#f3b4b4]")}>
+              {formatCop(spendable.spendable)}
+            </dd>
           </div>
           <div className="rounded-2xl bg-white/8 px-3 py-2.5">
             <dt className="text-white/50">Ingresos</dt>
@@ -229,6 +248,11 @@ export function FinancialHome({
             <dd className="mt-1 text-sm font-medium money text-[#f3b4b4]">{formatCop(cycleMetrics.outflows)}</dd>
           </div>
         </dl>
+        <p className="mt-3 text-[11px] leading-relaxed text-white/55">
+          {spendable.spendable < 0 ? "Hay un déficit. " : ""}
+          Para gastar es el saldo, menos {formatCop(spendable.commitments)} de compromisos hasta el próximo cierre
+          {spendable.reserved > 0 ? ` y ${formatCop(spendable.reserved)} reservados en ahorro` : ""}. Los ingresos previstos no entran.
+        </p>
       </section>
 
       <section className="mt-4">
@@ -380,8 +404,11 @@ export function FinancialHome({
         )}
       </FinanceActionSheet>
 
-      <FinanceActionSheet open={accion === "ciclo"} title="Nuevo ciclo" onClose={closeSheets}>
-        <CycleForm cycles={data.cycles} />
+      <FinanceActionSheet open={accion === "ciclo"} title="Periodos" onClose={closeSheets}>
+        <div className="grid gap-6">
+          <PayScheduleForm accounts={data.accounts} onDone={closeSheets} />
+          <CycleForm cycles={data.cycles} />
+        </div>
       </FinanceActionSheet>
 
       <FinanceActionSheet open={accion === "categoria"} title="Categoría" onClose={closeSheets}>
