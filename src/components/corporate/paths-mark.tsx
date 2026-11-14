@@ -11,19 +11,19 @@ const units = [
     id: "transporte",
     label: "Transporte",
     href: publicRoutes.transport,
-    color: "#102A56",
+    color: "#091B35",
   },
   {
     id: "software",
     label: "Software",
     href: publicRoutes.software,
-    color: "#2563EB",
+    color: "#2457B2",
   },
   {
     id: "planner",
     label: "Planner",
     href: publicRoutes.planner,
-    color: "#38BDF8",
+    color: "#508BEB",
   },
 ] as const
 
@@ -41,12 +41,12 @@ export function PathsMark() {
         <title id="paths-mark-title">Tres caminos de VIVO que convergen en un mismo propósito</title>
         <defs>
           <linearGradient id="vivo-path-software" x1="0" y1="1" x2="1" y2="0">
-            <stop offset="0%" stopColor="#2563EB" />
-            <stop offset="100%" stopColor="#38BDF8" />
+            <stop offset="0%" stopColor="#2457B2" />
+            <stop offset="100%" stopColor="#508BEB" />
           </linearGradient>
           <linearGradient id="vivo-path-planner" x1="0" y1="1" x2="1" y2="0">
-            <stop offset="0%" stopColor="#7DD3FC" />
-            <stop offset="100%" stopColor="#2563EB" />
+            <stop offset="0%" stopColor="#508BEB" />
+            <stop offset="100%" stopColor="#2457B2" />
           </linearGradient>
           <filter id="vivo-soft" x="-20%" y="-20%" width="140%" height="140%">
             <feGaussianBlur stdDeviation="8" result="blur" />
@@ -63,7 +63,7 @@ export function PathsMark() {
         <path
           d="M72 392 C 148 360, 210 300, 268 228 C 318 168, 352 132, 402 96"
           fill="none"
-          stroke="#102A56"
+          stroke="#091B35"
           strokeWidth={active && active !== "transporte" ? 6 : 10}
           strokeLinecap="round"
           className="corporate-path"
@@ -92,15 +92,15 @@ export function PathsMark() {
 
         <polygon
           points="398,52 468,108 392,128"
-          fill="#2563EB"
+          fill="#2457B2"
           filter="url(#vivo-soft)"
           className="corporate-arrow"
         />
-        <polygon points="404,64 454,106 398,118" fill="#102A56" />
+        <polygon points="404,64 454,106 398,118" fill="#091B35" />
 
-        <circle cx="72" cy="392" r="7" fill="#102A56" />
-        <circle cx="96" cy="248" r="7" fill="#2563EB" />
-        <circle cx="168" cy="428" r="7" fill="#38BDF8" />
+        <circle cx="72" cy="392" r="7" fill="#091B35" />
+        <circle cx="96" cy="248" r="7" fill="#2457B2" />
+        <circle cx="168" cy="428" r="7" fill="#508BEB" />
       </svg>
 
       <ul className="mt-2 flex flex-wrap justify-center gap-2 sm:absolute sm:right-0 sm:bottom-6 sm:mt-0 sm:flex-col sm:items-end">

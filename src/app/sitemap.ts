@@ -10,8 +10,6 @@ export default function sitemap(): MetadataRoute.Sitemap {
     publicRoutes.software,
     publicRoutes.planner,
     publicRoutes.plans,
-    publicRoutes.login,
-    publicRoutes.register,
     publicRoutes.privacy,
     publicRoutes.terms,
     publicRoutes.contact,

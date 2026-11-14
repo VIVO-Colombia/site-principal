@@ -1,20 +1,21 @@
 export const brand = {
   name: process.env.NEXT_PUBLIC_PRODUCT_NAME?.trim() || "VIVO Planner",
-  tagline: "Ve cuánto te queda. Antes de gastarlo.",
+  tagline: "Que tu dinero tenga un plan.",
   description:
-    "Ingresos, gastos, presupuesto y pagos en un solo ciclo. Tú eliges las fechas. El sistema te dice qué puedes gastar hoy.",
-  shortDescription: "Organiza ingresos, gastos y pagos. Sabe cuánto te queda, en un solo lugar.",
+    "Organiza tus ingresos, controla tus gastos y descubre cuánto puedes gastar sin perder de vista tus próximos pagos.",
+  shortDescription:
+    "Planeación financiera personal para ver el dinero disponible y anticipar obligaciones.",
 } as const
 
 export const group = {
   name: "VIVO",
   legalName: "VIVO Colombia",
-  title: "VIVO Colombia | Grupo Empresarial",
-  tagline: "Diferentes caminos. Un mismo propósito.",
+  title: "VIVO Colombia | Transporte, software y finanzas",
+  tagline: "Hacemos que las cosas avancen.",
   description:
-    "Conectamos soluciones de transporte, tecnología y planeación financiera para hacer más sencillo lo que realmente importa.",
+    "Movemos carga, simplificamos la logística con tecnología y te ayudamos a tomar el control de tus finanzas.",
   shortDescription:
-    "Grupo empresarial colombiano con soluciones de transporte, software y planeación financiera.",
+    "Tres soluciones colombianas con una misma visión: transporte de carga, gestión documental y planeación financiera.",
 } as const
 
 export const site = {

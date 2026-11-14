@@ -13,7 +13,9 @@ import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { analyticsEvents } from "@/config/analytics"
 import { catalogPlans } from "@/config/plans"
+import { track } from "@/lib/analytics"
 import { publicRoutes } from "@/config/routes"
 import { registerSchema, type RegisterValues } from "@/lib/validations/auth"
 
@@ -44,6 +46,7 @@ export function RegisterForm({ plan }: { plan?: string }) {
       return
     }
     if (result?.success) {
+      track(analyticsEvents.signupComplete, { plan: plan || "gratis" })
       setMessage(result.success)
     }
   }

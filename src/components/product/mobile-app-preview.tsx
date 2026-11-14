@@ -26,7 +26,7 @@ export function MobileAppPreview({ tall = false }: { tall?: boolean }) {
       <div className="flex items-center justify-between gap-3 px-4 pt-3">
         <div className="min-w-0">
           <div className="flex items-center gap-2">
-            <p className="text-[11px] text-[#5b6b82]">Ciclo actual</p>
+            <p className="text-[11px] text-[#5b6b82]">Ejemplo</p>
             <DemoBadge />
           </div>
           <p className="mt-0.5 whitespace-nowrap text-[13px] font-semibold tracking-tight text-[#17243c]">

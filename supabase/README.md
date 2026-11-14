@@ -16,9 +16,11 @@ Ejecuta en el SQL Editor, **en este orden**:
 4. `migrations/0004_rls.sql`
 5. `migrations/0005_stabilization.sql`
 6. `migrations/0006_free_premium_home.sql`
-7. `migrations/0007_pay_schedule_and_account_columns.sql`
+7. `migrations/0007_commercial_leads.sql`
 
 `0005`, `0006` y `0007` son aditivas: no borran tablas ni reescriben ciclos ya creados. En una base que ya está en producción, ejecuta las que falten y deja que `0007` termine: recarga la caché de la API. Sin esa caché, crear una cuenta falla con `Could not find the 'color' column of 'financial_accounts'`.
+
+`0007_commercial_leads.sql` crea la tabla de cotizaciones y solicitudes públicas. Sin esa migración, o sin `SUPABASE_SERVICE_ROLE_KEY` / `LEAD_WEBHOOK_URL`, los formularios comerciales no se publican como operativos.
 
 `schema.sql` queda como referencia de la fase 1. No lo ejecutes encima de las migraciones versionadas.
 

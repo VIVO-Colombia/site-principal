@@ -1,18 +1,18 @@
 const steps = [
   {
     number: "01",
-    title: "Crea tu cuenta.",
-    body: "Correo, contraseña y listo. Sin formularios eternos.",
+    title: "Reúne lo que entra.",
+    body: "Registras ingresos en el ciclo que tú defines, no en un mes calendario fijo.",
   },
   {
     number: "02",
-    title: "Entra al plan Free.",
-    body: "Confirmas el correo y empiezas. Premium se pide solo si lo quieres.",
+    title: "Deja las obligaciones a la vista.",
+    body: "Pagos programados y gastos del periodo quedan antes de decidir un gasto nuevo.",
   },
   {
     number: "03",
-    title: "Arma tu ciclo.",
-    body: "Cuentas, presupuesto y el primer movimiento. El saldo aparece solo.",
+    title: "Mira cuánto puedes usar.",
+    body: "El disponible sale de tus cuentas, tu presupuesto y lo que ya salió.",
   },
 ]
 
@@ -22,11 +22,11 @@ export function HowItWorks() {
       <div className="mx-auto max-w-6xl">
         <div className="max-w-2xl">
           <p className="text-sm font-medium text-primary">Cómo funciona</p>
-          <h2 className="mt-3 text-3xl font-semibold tracking-tight sm:text-4xl">
-            Tres pasos. Empiezas este mes.
+          <h2 className="mt-3 text-3xl font-semibold tracking-tight text-[#091B35] sm:text-4xl">
+            Un ciclo, de lo que entra a lo que puedes gastar.
           </h2>
-          <p className="mt-3 text-[#5b6b82]">
-            El plan Free no vence. Las pruebas Premium solo las abre el equipo, con fecha de cierre.
+          <p className="mt-3 text-[#596579]">
+            El plan Free no vence. Premium se solicita aparte y se activa a mano, sin pasarela.
           </p>
         </div>
         <ol className="mt-10 grid gap-4 md:grid-cols-3">

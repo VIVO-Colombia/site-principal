@@ -34,8 +34,8 @@ export function ProblemSection() {
       <div className="mx-auto max-w-6xl">
         <div className="max-w-2xl">
           <p className="text-sm font-medium text-primary">El problema</p>
-          <h2 className="mt-3 text-3xl font-semibold tracking-tight sm:text-4xl">
-            El dinero se sale del Excel. Aquí se queda.
+          <h2 className="mt-3 text-3xl font-semibold tracking-tight text-[#091B35] sm:text-4xl">
+            El problema no es anotar. Es no saber qué puedes gastar.
           </h2>
         </div>
         <div className="mt-10 divide-y divide-[#e5eaf1] overflow-hidden rounded-[28px] bg-white ring-1 ring-[#e5eaf1]">

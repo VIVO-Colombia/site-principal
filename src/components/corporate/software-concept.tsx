@@ -4,8 +4,8 @@ export function ManifestConcept({ compact = false }: { compact?: boolean }) {
   return (
     <div className="relative">
       <div className="overflow-hidden rounded-[28px] bg-white shadow-[0_24px_60px_-32px_rgb(16_42_86_/_0.45)] ring-1 ring-[#dbe7f5]">
-        <div className="flex items-center justify-between gap-3 border-b border-[#e5eaf1] bg-[#F6F8FC] px-4 py-2.5">
-          <p className="min-w-0 truncate text-[11px] tracking-[0.14em] text-[#5b6b82] uppercase">
+        <div className="flex flex-wrap items-center justify-between gap-2 border-b border-[#e5eaf1] bg-[#F6F8FC] px-4 py-2.5">
+          <p className="min-w-0 text-[11px] tracking-[0.14em] text-[#5b6b82] uppercase">
             Documento de transporte
           </p>
           <ConceptBadge className="shrink-0" />
@@ -31,14 +31,15 @@ export function ManifestConcept({ compact = false }: { compact?: boolean }) {
 
 export function RequestFlowConcept() {
   const steps = [
-    { n: "01", title: "Inicia la solicitud", body: "Desde la plataforma o un canal cotidiano." },
-    { n: "02", title: "Entrega los datos", body: "Origen, destino y lo necesario para el documento." },
-    { n: "03", title: "Se valida la información", body: "La plataforma revisa que el requerimiento esté completo." },
-    { n: "04", title: "Se gestiona el documento", body: "Según las integraciones disponibles en ese momento." },
+    { n: "01", title: "Solicitud", body: "El trámite empieza con lo que la operación necesita mover." },
+    { n: "02", title: "Datos", body: "Origen, destino y la información del documento, en un solo lugar." },
+    { n: "03", title: "Validación", body: "Se revisa que el requerimiento esté completo antes de seguir." },
+    { n: "04", title: "Gestión documental", body: "El documento se organiza según lo que ya esté habilitado." },
+    { n: "05", title: "Seguimiento", body: "El estado deja de vivir solo en chats y planillas sueltas." },
   ]
 
   return (
-    <ol className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+    <ol className="grid gap-4 md:grid-cols-2 xl:grid-cols-5">
       {steps.map((step, index) => (
         <li
           key={step.n}
