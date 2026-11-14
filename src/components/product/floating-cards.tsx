@@ -40,7 +40,7 @@ export function UpcomingPaymentCard({ compact = false }: { compact?: boolean }) 
         {demoFinance.nextPayment.name}
       </p>
       <p className="text-[12px] text-[#5b6b82]">
-        {demoFinance.nextPayment.due} · en {demoFinance.nextPayment.days} días
+        {demoFinance.nextPayment.due} · {demoFinance.nextPayment.when}
       </p>
       <p className="mt-1 text-sm font-medium money">{formatCop(demoFinance.nextPayment.amount)}</p>
     </div>

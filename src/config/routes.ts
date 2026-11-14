@@ -40,6 +40,7 @@ export const adminRoutes = {
   notifications: "/admin/notificaciones",
   audit: "/admin/auditoria",
   settings: "/admin/configuracion",
+  commercial: "/admin/comercial",
 } as const
 
 export const marketingAnchors = {

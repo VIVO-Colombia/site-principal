@@ -1,7 +1,9 @@
 import type { Metadata } from "next"
 import { Suspense } from "react"
 
+import { TrackView } from "@/components/analytics/track-view"
 import { PlansSection } from "@/components/marketing/plans-section"
+import { analyticsEvents } from "@/config/analytics"
 import { catalogPlans, type CatalogPlan } from "@/config/plans"
 import { productName } from "@/config/brand"
 import { cadenceLabels } from "@/lib/finance/labels"
@@ -15,6 +17,7 @@ export const metadata: Metadata = {
 export default function PlansPage() {
   return (
     <div className="marketing-scope pt-6">
+      <TrackView event={analyticsEvents.plansView} />
       <Suspense fallback={<PlansSection compact />}>
         <PublishedPlans />
       </Suspense>

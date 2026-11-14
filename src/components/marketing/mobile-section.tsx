@@ -16,7 +16,7 @@ const points = [
 export function MobileSection() {
   return (
     <section id="celular" className="scroll-mt-24 px-4 py-8 sm:px-6">
-      <div className="mx-auto max-w-6xl overflow-hidden rounded-[32px] bg-[#17243c] px-6 py-12 text-white sm:px-12 sm:py-14 lg:px-16">
+      <div className="mx-auto max-w-6xl overflow-hidden rounded-[32px] bg-[#091B35] px-6 py-12 text-white sm:px-12 sm:py-14 lg:px-16">
         <div className="grid items-center gap-10 lg:grid-cols-[1fr_auto] lg:gap-12">
           <div>
             <p className="text-sm font-medium text-white/70">En el bolsillo</p>

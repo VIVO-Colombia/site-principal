@@ -15,8 +15,12 @@ Ejecuta en el SQL Editor, **en este orden**:
 3. `migrations/0003_finance.sql`
 4. `migrations/0004_rls.sql`
 5. `migrations/0005_stabilization.sql`
+6. `migrations/0006_free_premium_home.sql`
+7. `migrations/0007_commercial_leads.sql`
 
 `0005_stabilization.sql` es aditiva e idempotente: no borra tablas ni reescribe datos. Hay que aplicarla en bases que ya corrieron 0001-0004.
+
+`0007_commercial_leads.sql` crea la tabla de cotizaciones y solicitudes públicas. Sin esa migración, o sin `SUPABASE_SERVICE_ROLE_KEY` / `LEAD_WEBHOOK_URL`, los formularios comerciales no se publican como operativos.
 
 `schema.sql` queda como referencia de la fase 1. No lo ejecutes encima de las migraciones versionadas.
 

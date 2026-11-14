@@ -55,7 +55,7 @@ export function PaymentsMini() {
       <p className="mt-1 text-sm font-semibold">{demoFinance.nextPayment.name}</p>
       <p className="money text-sm">{formatCop(demoFinance.nextPayment.amount)}</p>
       <span className="mt-2 inline-flex rounded-full bg-[#fef2f2] px-2 py-1 text-[11px] font-medium text-[#dc2626]">
-        En {demoFinance.nextPayment.days} días
+        {demoFinance.nextPayment.when}
       </span>
     </div>
   )

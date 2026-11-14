@@ -26,3 +26,20 @@ export function isTurnstileConfigured() {
     process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY && process.env.TURNSTILE_SECRET_KEY
   )
 }
+
+export function getLeadWebhookUrl() {
+  const url = process.env.LEAD_WEBHOOK_URL?.trim() ?? ""
+  if (!url.startsWith("https://")) return ""
+  return url
+}
+
+export function isLeadChannelConfigured() {
+  const hasServiceRole = Boolean(
+    process.env.SUPABASE_SERVICE_ROLE_KEY &&
+      process.env.NEXT_PUBLIC_SUPABASE_URL?.startsWith("http")
+  )
+  const hasDestination = hasServiceRole || Boolean(getLeadWebhookUrl())
+  if (!hasDestination) return false
+  if (process.env.NODE_ENV === "production" && !isTurnstileConfigured()) return false
+  return true
+}

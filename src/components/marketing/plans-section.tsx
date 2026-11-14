@@ -1,6 +1,7 @@
 import Link from "next/link"
 
 import { CtaLink } from "@/components/marketing/cta-link"
+import { analyticsEvents } from "@/config/analytics"
 import { catalogPlans, type CatalogPlan } from "@/config/plans"
 import { publicRoutes } from "@/config/routes"
 import { cn } from "cn"
@@ -17,8 +18,8 @@ export function PlansSection({
       <div className="mx-auto max-w-6xl">
         <div className="max-w-2xl">
           <p className="text-sm font-medium text-primary">Planes</p>
-          <h2 className="mt-3 text-3xl font-semibold tracking-tight sm:text-4xl">
-            Elige vigencia. El valor te lo confirmamos.
+          <h2 className="mt-3 text-3xl font-semibold tracking-tight text-[#091B35] sm:text-4xl">
+            Free para empezar. Premium cuando lo pidas.
           </h2>
           <p className="mt-3 text-[#5b6b82]">
             Activación manual con comprobante. Sin cobro automático por ahora y sin letra pequeña
@@ -53,6 +54,7 @@ export function PlansSection({
                   href={`${publicRoutes.register}?plan=${plan.id}`}
                   variant={plan.highlighted ? "primary" : "secondary"}
                   className="w-full sm:w-auto"
+                  event={plan.id === "gratis" ? analyticsEvents.signupClick : analyticsEvents.premiumRequest}
                 >
                   {plan.id === "gratis" ? "Crear cuenta Free" : "Solicitar Premium"}
                 </CtaLink>
