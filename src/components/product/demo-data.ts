@@ -1,7 +1,7 @@
 export const DEMO_LABEL = "Demostración"
 
 export const demoFinance = {
-  cycleLabel: "16 oct — 15 nov",
+  cycleLabel: "Ciclo de ejemplo",
   available: 2_480_000,
   income: 4_500_000,
   expenses: 2_020_000,
@@ -11,8 +11,8 @@ export const demoFinance = {
   nextPayment: {
     name: "Arriendo",
     amount: 1_200_000,
-    due: "12 nov",
-    days: 2,
+    due: "Dentro del ciclo",
+    when: "Programado",
   },
   accounts: [
     { name: "Bancolombia", amount: 1_850_000 },
@@ -20,10 +20,10 @@ export const demoFinance = {
     { name: "Efectivo", amount: 200_000 },
   ],
   movements: [
-    { name: "Nómina", type: "ingreso" as const, amount: 4_500_000, date: "30 oct" },
-    { name: "Mercado", type: "gasto" as const, amount: 286_400, date: "2 nov" },
-    { name: "Transporte", type: "gasto" as const, amount: 64_000, date: "4 nov" },
-    { name: "Servicios", type: "gasto" as const, amount: 187_900, date: "6 nov" },
+    { name: "Nómina", type: "ingreso" as const, amount: 4_500_000, date: "Día 1" },
+    { name: "Mercado", type: "gasto" as const, amount: 286_400, date: "Día 4" },
+    { name: "Transporte", type: "gasto" as const, amount: 64_000, date: "Día 6" },
+    { name: "Servicios", type: "gasto" as const, amount: 187_900, date: "Día 8" },
   ],
   categories: [
     { name: "Vivienda", used: 1_200_000, planned: 1_200_000 },

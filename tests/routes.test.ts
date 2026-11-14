@@ -39,5 +39,7 @@ describe("corporate navigation", () => {
     expect(isCorporateNavActive("planner", "/planes")).toBe(true)
     expect(isCorporateNavActive("transporte", "/transporte")).toBe(true)
     expect(isCorporateNavActive("software", "/software")).toBe(true)
+    expect(isCorporateNavActive("contacto", "/contacto")).toBe(true)
+    expect(isCorporateNavActive("contacto", "/transporte")).toBe(false)
   })
 })

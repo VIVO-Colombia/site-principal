@@ -1,137 +1,140 @@
 import type { Metadata } from "next"
-import Image from "next/image"
 
-import { CtaLink } from "@/components/marketing/cta-link"
+import { LeadForm } from "@/components/commercial/lead-form"
 import { ConceptBadge } from "@/components/corporate/concept-badge"
 import {
-  ManifestConcept,
   MessagingConcept,
   RequestFlowConcept,
 } from "@/components/corporate/software-concept"
-import { UnitCrumb } from "@/components/corporate/unit-crumb"
-import { pageMetadata } from "@/lib/seo"
+import { CtaLink } from "@/components/marketing/cta-link"
+import { JsonLd } from "@/components/seo/json-ld"
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion"
+import { publicContact } from "@/config/contact"
+import { site } from "@/config/brand"
 import { publicRoutes } from "@/config/routes"
+import { isLeadChannelConfigured } from "@/lib/env"
+import { pageMetadata } from "@/lib/seo"
 
 export const metadata: Metadata = pageMetadata({
-  title: "VIVO Software | Gestión de manifiestos",
+  title: "Software para gestión documental de transporte | VIVO Software",
   description:
-    "Una solución digital pensada para simplificar la gestión y emisión de documentos de transporte.",
+    "Centraliza solicitudes y organiza la información de documentos de transporte. Conoce el estado real del producto y pide información.",
   path: publicRoutes.software,
 })
 
 const problems = [
+  { title: "Datos dispersos", body: "La misma información vive en papeles, chats y planillas." },
+  { title: "Trámites repetitivos", body: "Cada documento vuelve a pedir lo que ya se escribió." },
+  { title: "Solicitudes en varios canales", body: "El requerimiento se parte y nadie ve el estado completo." },
+  { title: "Poca claridad del estado", body: "No queda claro si el documento está en datos, validación o seguimiento." },
+]
+
+const audiences = [
   {
-    title: "El trámite consume el tiempo de la operación.",
-    body: "Cada documento pide los mismos datos, una y otra vez, mientras la carga espera.",
+    title: "Conductor o transportador independiente",
+    body: "Quien necesita pedir un documento sin montar un área administrativa.",
   },
   {
-    title: "La información vive en mil lugares.",
-    body: "Papeles, chats y planillas se desordenan cuando más se necesita un dato preciso.",
+    title: "Empresa transportadora",
+    body: "Equipos que concentran solicitudes y quieren una sola fuente de información.",
   },
   {
-    title: "El documento tiene que estar listo a tiempo.",
-    body: "Sin un flujo claro, emitir o gestionar un manifiesto se vuelve un cuello de botella.",
+    title: "Equipo de operaciones",
+    body: "Quienes coordinan el día a día y necesitan saber en qué va cada trámite.",
+  },
+]
+
+const faqs = [
+  {
+    question: "¿El software ya está en operación?",
+    answer:
+      "Esta página presenta la solución y el flujo previsto. No afirma que todas las funciones, ni las integraciones con entidades, estén habilitadas. Por eso el llamado es a solicitar información o conocer la disponibilidad.",
+  },
+  {
+    question: "¿Hay un bot de WhatsApp activo?",
+    answer:
+      "No. WhatsApp forma parte de la visión para iniciar solicitudes cuando esa integración exista. Hoy no hay un bot, un número de producto ni una conexión regulatoria publicados como operativos.",
+  },
+  {
+    question: "¿Para qué sirve pedir información?",
+    answer:
+      "Para contarte el alcance disponible en ese momento: qué se puede mostrar, qué sigue en desarrollo y cómo se podría usar en tu operación.",
   },
 ]
 
 export default function SoftwarePage() {
+  const ready = isLeadChannelConfigured()
+  const contact = publicContact()
+
   return (
     <div className="corporate-scope bg-[#F6F8FC]">
-      <section className="relative overflow-hidden px-4 pt-10 pb-16 sm:px-6 sm:pt-16 lg:pb-24">
-        <div className="pointer-events-none absolute inset-0 corporate-hero-wash" aria-hidden />
-        <div className="relative mx-auto grid w-full max-w-6xl items-center gap-12 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.05fr)]">
+      <JsonLd
+        data={{
+          "@context": "https://schema.org",
+          "@type": "SoftwareApplication",
+          name: "VIVO Software",
+          applicationCategory: "BusinessApplication",
+          operatingSystem: "Web",
+          url: `${site.url}${publicRoutes.software}`,
+          description:
+            "Solución para centralizar solicitudes y organizar documentos de transporte.",
+        }}
+      />
+
+      <section className="relative overflow-hidden bg-[#091B35] text-white">
+        <div className="pointer-events-none absolute inset-0 vivo-lines" aria-hidden />
+        <div className="relative mx-auto grid w-full max-w-6xl items-end gap-12 px-4 py-16 sm:px-6 lg:grid-cols-[1fr_0.9fr] lg:py-24">
           <div>
-            <UnitCrumb unit="Software" />
-            <h1 className="font-heading mt-5 text-[2.15rem] leading-[1.05] font-semibold tracking-[-0.04em] text-[#142238] sm:text-5xl lg:text-[3.5rem]">
+            <p className="text-sm font-medium tracking-[0.16em] text-[#508BEB] uppercase">
+              VIVO Software
+            </p>
+            <h1 className="font-heading mt-4 text-[2.4rem] leading-[1.02] font-semibold tracking-[-0.04em] sm:text-5xl lg:text-[3.5rem]">
               Menos trámites. Más movimiento.
             </h1>
-            <p className="mt-5 max-w-md text-[15px] leading-7 text-[#5b6b82] sm:text-lg">
-              Una solución digital pensada para simplificar la gestión y emisión de documentos de
-              transporte.
+            <p className="mt-5 max-w-xl text-base leading-7 text-white/75">
+              La gestión de documentos de transporte puede ser más sencilla. Centraliza solicitudes,
+              organiza información y reduce tareas repetitivas.
             </p>
             <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-              <CtaLink href="#propuesta">Conocer la solución</CtaLink>
-              <CtaLink href={publicRoutes.contact} variant="secondary">
-                Solicitar información
+              <CtaLink href="#informacion" variant="navy">
+                Conocer disponibilidad
+              </CtaLink>
+              <CtaLink href="#flujo" variant="invert">
+                Ver el flujo
               </CtaLink>
             </div>
           </div>
-          <div className="relative">
-            <div className="overflow-hidden rounded-[32px] bg-[#EAF2FF]">
-              <Image
-                src="/corporate/software-documents.jpg"
-                alt="Ilustración conceptual de documentos digitales conectados a una interfaz"
-                width={1280}
-                height={720}
-                priority
-                sizes="(max-width: 1024px) 100vw, 50vw"
-                className="h-auto w-full"
-              />
-            </div>
-            <div className="relative mx-auto -mt-14 w-[min(100%,22rem)] lg:mx-0 lg:-mt-20 lg:ml-8 lg:w-[21rem]">
-              <ManifestConcept compact />
-            </div>
-          </div>
+          <MessagingConcept />
         </div>
       </section>
 
       <section className="px-4 py-16 sm:px-6 sm:py-24">
         <div className="mx-auto max-w-6xl">
-          <p className="text-sm font-medium tracking-[0.16em] text-primary uppercase">El problema</p>
-          <h2 className="font-heading mt-4 max-w-2xl text-3xl font-semibold tracking-[-0.035em] text-[#142238] sm:text-4xl">
+          <h2 className="font-heading max-w-2xl text-3xl font-semibold tracking-[-0.035em] text-[#091B35] sm:text-4xl">
             El documento no debería frenar la carga.
           </h2>
-          <div className="mt-12 space-y-px overflow-hidden rounded-[32px] bg-[#e5eaf1]">
-            {problems.map((item, index) => (
-              <article key={item.title} className="bg-white px-6 py-8 sm:px-10">
-                <p className="text-xs font-medium tracking-[0.16em] text-primary uppercase">
-                  {String(index + 1).padStart(2, "0")}
-                </p>
-                <h3 className="mt-3 text-2xl font-semibold tracking-tight text-[#142238]">
-                  {item.title}
-                </h3>
-                <p className="mt-3 max-w-2xl text-[15px] leading-7 text-[#5b6b82]">{item.body}</p>
+          <div className="mt-12 grid gap-px overflow-hidden rounded-[28px] bg-[#e3e9f2] sm:grid-cols-2">
+            {problems.map((item) => (
+              <article key={item.title} className="bg-white px-6 py-8">
+                <h3 className="text-xl font-semibold text-[#091B35]">{item.title}</h3>
+                <p className="mt-3 text-sm leading-6 text-[#596579]">{item.body}</p>
               </article>
             ))}
           </div>
         </div>
       </section>
 
-      <section id="propuesta" className="scroll-mt-24 bg-white px-4 py-16 sm:px-6 sm:py-24">
-        <div className="mx-auto grid w-full max-w-6xl gap-12 lg:grid-cols-[0.9fr_1.1fr] lg:items-center">
-          <div>
-            <p className="text-sm font-medium tracking-[0.16em] text-primary uppercase">
-              Nuestra propuesta
-            </p>
-            <h2 className="font-heading mt-4 text-3xl font-semibold tracking-[-0.035em] text-[#142238] sm:text-4xl">
-              Una plataforma que ordena el trámite y deja correr la operación.
-            </h2>
-            <p className="mt-5 text-[15px] leading-7 text-[#5b6b82]">
-              VIVO Software es el producto tecnológico del grupo para gestionar y emitir documentos
-              de transporte. Está pensado para reducir pasos repetitivos, concentrar la información
-              y estar disponible cuando la operación no espera.
-            </p>
-            <p className="mt-4 text-[15px] leading-7 text-[#5b6b82]">
-              Una solicitud puede iniciarse por canales cotidianos, como WhatsApp, y continuar en la
-              plataforma. Las integraciones con entidades oficiales se habilitarán cuando estén
-              realmente disponibles; esta página no las presenta como operativas.
-            </p>
-          </div>
-          <MessagingConcept />
-        </div>
-      </section>
-
-      <section id="como-funciona" className="scroll-mt-24 px-4 py-16 sm:px-6 sm:py-24">
+      <section id="flujo" className="scroll-mt-24 bg-white px-4 py-16 sm:px-6 sm:py-24">
         <div className="mx-auto max-w-6xl">
           <div className="flex flex-wrap items-end justify-between gap-4">
-            <div>
-              <p className="text-sm font-medium tracking-[0.16em] text-primary uppercase">
-                Cómo funciona
-              </p>
-              <h2 className="font-heading mt-4 max-w-xl text-3xl font-semibold tracking-[-0.035em] text-[#142238] sm:text-4xl">
-                Un flujo claro, de la solicitud al documento.
-              </h2>
-            </div>
+            <h2 className="font-heading max-w-xl text-3xl font-semibold tracking-[-0.035em] text-[#091B35] sm:text-4xl">
+              De la solicitud al seguimiento.
+            </h2>
             <ConceptBadge />
           </div>
           <div className="mt-12">
@@ -140,75 +143,66 @@ export default function SoftwarePage() {
         </div>
       </section>
 
-      <section className="bg-white px-4 py-16 sm:px-6 sm:py-24">
-        <div className="mx-auto max-w-6xl">
-          <p className="text-sm font-medium tracking-[0.16em] text-primary uppercase">
-            Para quién está diseñado
-          </p>
-          <h2 className="font-heading mt-4 max-w-2xl text-3xl font-semibold tracking-[-0.035em] text-[#142238] sm:text-4xl">
-            La misma necesidad, dos maneras de operar.
+      <section className="px-4 py-16 sm:px-6 sm:py-24">
+        <div className="mx-auto grid max-w-6xl gap-8 lg:grid-cols-3">
+          {audiences.map((item) => (
+            <article key={item.title} className="border-t border-[#091B35] pt-5">
+              <h2 className="text-xl font-semibold tracking-tight text-[#091B35]">{item.title}</h2>
+              <p className="mt-3 text-sm leading-6 text-[#596579]">{item.body}</p>
+            </article>
+          ))}
+        </div>
+      </section>
+
+      <section className="bg-[#102C52] px-4 py-16 text-white sm:px-6">
+        <div className="mx-auto max-w-3xl">
+          <h2 className="font-heading text-3xl font-semibold tracking-[-0.035em]">
+            WhatsApp, como visión. No como canal activo.
           </h2>
-          <div className="mt-12 grid gap-6 lg:grid-cols-2">
-            <article className="rounded-[32px] bg-[#102A56] px-7 py-10 text-white sm:px-10">
-              <p className="text-sm font-medium tracking-[0.16em] text-white/55 uppercase">
-                Independientes
-              </p>
-              <h3 className="font-heading mt-4 text-2xl font-semibold tracking-tight">
-                Conductores y transportadores.
-              </h3>
-              <p className="mt-4 text-[15px] leading-7 text-white/70">
-                Para quien necesita gestionar documentos sin armar un área administrativa. El flujo
-                cabe en el ritmo del oficio: solicitar, enviar datos y seguir el movimiento.
-              </p>
-            </article>
-            <article className="rounded-[32px] bg-[#EAF2FF] px-7 py-10 sm:px-10">
-              <p className="text-sm font-medium tracking-[0.16em] text-primary uppercase">
-                Empresas
-              </p>
-              <h3 className="font-heading mt-4 text-2xl font-semibold tracking-tight text-[#142238]">
-                Operaciones que concentran documentos.
-              </h3>
-              <p className="mt-4 text-[15px] leading-7 text-[#5b6b82]">
-                Para equipos que necesitan ordenar solicitudes, validar información y emitir o
-                gestionar manifiestos sin que cada trámite viva en un hilo distinto.
-              </p>
-            </article>
-          </div>
+          <p className="mt-4 text-sm leading-7 text-white/75">
+            La idea es que una solicitud pueda empezar por un canal cotidiano y seguir en la
+            plataforma. Eso no está publicado como una integración operativa: no hay bot, conexión
+            regulatoria ni número de producto anunciado.
+            {contact.whatsapp
+              ? " Si aparece un WhatsApp en Contacto, es un medio comercial del grupo, no el producto."
+              : ""}
+          </p>
         </div>
       </section>
 
-      <section className="px-4 py-16 sm:px-6 sm:py-20">
-        <div className="mx-auto flex w-full max-w-6xl flex-col gap-6 rounded-[32px] bg-[#102A56] px-6 py-12 text-white sm:px-12 lg:flex-row lg:items-end lg:justify-between">
-          <div className="max-w-2xl">
-            <p className="text-sm font-medium tracking-[0.16em] text-white/55 uppercase">
-              Software conectado con la operación
-            </p>
-            <h2 className="font-heading mt-4 text-3xl font-semibold tracking-[-0.035em] sm:text-4xl">
-              Lo digital nace de mover carga, no al revés.
-            </h2>
-            <p className="mt-4 text-[15px] leading-7 text-white/70">
-              VIVO Software se construye junto a VIVO Transporte: la experiencia del sector alimenta
-              la herramienta, y la herramienta busca devolverle tiempo a la operación.
-            </p>
-          </div>
-          <CtaLink href={publicRoutes.transport} variant="navy">
-            Conocer VIVO Transporte
-          </CtaLink>
+      <section className="px-4 py-16 sm:px-6">
+        <div className="mx-auto max-w-3xl">
+          <h2 className="font-heading text-3xl font-semibold text-[#091B35]">Preguntas frecuentes</h2>
+          <Accordion type="single" collapsible className="mt-6">
+            {faqs.map((item, index) => (
+              <AccordionItem key={item.question} value={`s-${index}`}>
+                <AccordionTrigger className="min-h-11 py-4 text-left text-base">
+                  {item.question}
+                </AccordionTrigger>
+                <AccordionContent className="leading-6 text-[#596579]">{item.answer}</AccordionContent>
+              </AccordionItem>
+            ))}
+          </Accordion>
         </div>
       </section>
 
-      <section className="px-4 pb-16 sm:px-6 sm:pb-24">
-        <div className="mx-auto flex max-w-6xl flex-col items-start justify-between gap-6 rounded-[32px] bg-white px-6 py-10 ring-1 ring-[#e5eaf1] sm:px-12 sm:py-14 lg:flex-row lg:items-center">
-          <div className="max-w-xl">
-            <h2 className="font-heading text-3xl font-semibold tracking-[-0.035em] text-[#142238] sm:text-4xl">
-              ¿Quieres conocer la solución?
+      <section className="px-4 pb-20 sm:px-6">
+        <div className="mx-auto grid max-w-6xl gap-10 lg:grid-cols-[0.8fr_1.2fr]">
+          <div>
+            <h2 className="font-heading text-3xl font-semibold tracking-[-0.035em] text-[#091B35]">
+              Solicita información
             </h2>
-            <p className="mt-4 text-[15px] leading-7 text-[#5b6b82]">
-              Solicita información por el canal oficial de VIVO. Si más adelante hay una demostración
-              o un medio adicional, se publicará en la página de contacto.
+            <p className="mt-4 text-sm leading-7 text-[#596579]">
+              Cuéntanos quién eres y qué parte de la operación quieres ordenar. La respuesta depende
+              de lo que esté disponible en ese momento.
             </p>
+            <div className="mt-6">
+              <CtaLink href={publicRoutes.transport} variant="secondary">
+                Ver VIVO Transporte
+              </CtaLink>
+            </div>
           </div>
-          <CtaLink href={publicRoutes.contact}>Solicitar información</CtaLink>
+          <LeadForm id="informacion" kind="software" ready={ready} />
         </div>
       </section>
     </div>
