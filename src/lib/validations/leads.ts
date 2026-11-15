@@ -38,12 +38,20 @@ export const quoteLeadSchema = z.object({
     .regex(/^\d{4}-\d{2}-\d{2}$/, "Usa una fecha válida")
     .optional()
     .or(z.literal("")),
+  originAddress: optionalText(180),
+  destinationAddress: optionalText(180),
+  distanceLabel: optionalText(40),
+  vehicleLabel: optionalText(80),
+  helpersLabel: optionalText(40),
+  estimateLabel: optionalText(80),
+  pendingNotes: optionalText(500),
+  accessNotes: optionalText(300),
 })
 
 export const messageLeadSchema = z.object({
   ...leadBase,
   kind: z.enum(["software", "contact"]),
-  topic: z.enum(["software", "transporte", "otro"]).optional(),
+  topic: z.enum(["software", "transporte", "planner", "general", "otro"]).optional(),
 })
 
 export const leadSchema = z.discriminatedUnion("kind", [quoteLeadSchema, messageLeadSchema])

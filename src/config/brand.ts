@@ -10,12 +10,12 @@ export const brand = {
 export const group = {
   name: "VIVO",
   legalName: "VIVO Colombia",
-  title: "VIVO Colombia | Transporte, software y finanzas",
-  tagline: "Hacemos que las cosas avancen.",
+  title: "VIVO Colombia | Transporte y soluciones de software",
+  tagline: "Movemos negocios. Creamos soluciones.",
   description:
-    "Movemos carga, simplificamos la logística con tecnología y te ayudamos a tomar el control de tus finanzas.",
+    "Transporte que conecta oportunidades. Tecnología que simplifica procesos y transforma la manera de trabajar y vivir.",
   shortDescription:
-    "Tres soluciones colombianas con una misma visión: transporte de carga, gestión documental y planeación financiera.",
+    "Dos divisiones: transporte terrestre de carga y soluciones de software para empresas y personas.",
 } as const
 
 export const site = {

@@ -125,6 +125,23 @@
   }
 }
 
+.corporate-scope {
+  --background: #f3f7ff;
+  --foreground: #07152c;
+  --primary: #315bff;
+  --ring: #315bff;
+  font-family: var(--font-manrope), var(--font-sans), ui-sans-serif, system-ui, sans-serif;
+  background: #f3f7ff;
+  color: #07152c;
+}
+
+.holo-sheen {
+  background:
+    radial-gradient(120% 80% at 10% 0%, rgb(141 219 255 / 0.35), transparent 45%),
+    radial-gradient(80% 60% at 90% 20%, rgb(183 167 255 / 0.28), transparent 40%),
+    #07152c;
+}
+
 @utility touch-target {
   min-height: 44px;
   min-width: 44px;

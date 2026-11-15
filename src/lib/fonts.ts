@@ -1,8 +1,13 @@
-import { Geist, Geist_Mono } from "next/font/google"
+import { Geist, Geist_Mono, Manrope } from "next/font/google"
 import localFont from "next/font/local"
 
 export const geistSans = Geist({
   variable: "--font-sans",
+  subsets: ["latin"],
+})
+
+export const manrope = Manrope({
+  variable: "--font-manrope",
   subsets: ["latin"],
 })
 

@@ -2,6 +2,7 @@ import Script from "next/script"
 
 import { CorporateFooter } from "@/components/corporate/corporate-footer"
 import { CorporateHeader } from "@/components/corporate/corporate-header"
+import { CorporateFloats } from "@/components/transport/corporate-floats"
 
 export default function MarketingLayout({
   children,
@@ -24,6 +25,7 @@ export default function MarketingLayout({
       <main id="contenido" className="flex-1">
         {children}
       </main>
+      <CorporateFloats />
       <CorporateFooter />
     </div>
   )

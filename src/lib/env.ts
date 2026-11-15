@@ -33,6 +33,10 @@ export function getLeadWebhookUrl() {
   return url
 }
 
+export function isWeb3FormsConfigured() {
+  return (process.env.WEB3FORMS_ACCESS_KEY?.trim().length ?? 0) > 10
+}
+
 export function isLeadChannelConfigured() {
   const hasServiceRole = Boolean(
     process.env.SUPABASE_SERVICE_ROLE_KEY &&
