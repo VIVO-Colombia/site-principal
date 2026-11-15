@@ -5,7 +5,7 @@ import { ContactChannels } from "@/components/commercial/contact-channels"
 import { CtaLink } from "@/components/marketing/cta-link"
 import { analyticsEvents } from "@/config/analytics"
 import { publicRoutes } from "@/config/routes"
-import { isLeadChannelConfigured } from "@/lib/env"
+import { isWeb3FormsConfigured } from "@/lib/env"
 import { pageMetadata } from "@/lib/seo"
 
 export const metadata: Metadata = pageMetadata({
@@ -16,7 +16,7 @@ export const metadata: Metadata = pageMetadata({
 })
 
 export default function ContactPage() {
-  const ready = isLeadChannelConfigured()
+  const ready = isWeb3FormsConfigured()
 
   return (
     <article className="corporate-scope bg-[#F6F8FC]">
@@ -26,9 +26,13 @@ export default function ContactPage() {
             Contacto
           </h1>
           <p className="mt-5 text-base leading-7 text-[#596579]">
-            Elige el camino. Transporte recibe cotizaciones, Software recibe solicitudes de
-            información y Planner abre con una cuenta.
+            Elige Transporte, Soluciones de software, VIVO Planner o una consulta general.
           </p>
+          {ready ? null : (
+            <p className="mt-4 text-sm text-[#315BFF]">
+              Falta WEB3FORMS_ACCESS_KEY. El formulario muestra el error y no simula el envío.
+            </p>
+          )}
           <div className="mt-8 flex flex-col items-start gap-3">
             <CtaLink href={`${publicRoutes.transport}#cotizacion`}>Solicitar cotización</CtaLink>
             <CtaLink href={`${publicRoutes.software}#informacion`} variant="secondary">
@@ -42,7 +46,7 @@ export default function ContactPage() {
             <ContactChannels />
           </div>
         </div>
-        <LeadForm kind="contact" ready={ready} />
+        <LeadForm kind="contact" ready />
       </div>
     </article>
   )

@@ -1,6 +1,14 @@
 import { adminRoutes, appRoutes, marketingAnchors, publicRoutes } from "@/config/routes"
 
 export const corporateNav = [
+  { href: publicRoutes.home, label: "Inicio", id: "grupo" },
+  { href: publicRoutes.transport, label: "Transporte", id: "transporte" },
+  { href: publicRoutes.software, label: "Soluciones de Software", id: "software" },
+  { href: publicRoutes.contact, label: "Contacto", id: "contacto" },
+] as const
+
+/** Navegación que la landing de Planner ya mostraba. No forma parte del sitio corporativo. */
+export const plannerHeaderNav = [
   { href: publicRoutes.home, label: "VIVO", id: "grupo" },
   { href: publicRoutes.transport, label: "Transporte", id: "transporte" },
   { href: publicRoutes.software, label: "Software", id: "software" },
@@ -18,7 +26,7 @@ export const marketingNav = [
 export const footerNav = {
   solutions: [
     { href: publicRoutes.transport, label: "VIVO Transporte" },
-    { href: publicRoutes.software, label: "VIVO Software" },
+    { href: publicRoutes.software, label: "Soluciones de software" },
     { href: publicRoutes.planner, label: "VIVO Planner" },
     { href: publicRoutes.contact, label: "Contacto" },
   ],

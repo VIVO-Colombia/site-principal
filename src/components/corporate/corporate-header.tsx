@@ -15,7 +15,7 @@ import {
 } from "@/components/ui/sheet"
 import { analyticsEvents, type AnalyticsEvent } from "@/config/analytics"
 import { group } from "@/config/brand"
-import { corporateNav, isCorporateNavActive, marketingNav } from "@/config/navigation"
+import { corporateNav, isCorporateNavActive, marketingNav, plannerHeaderNav } from "@/config/navigation"
 import { isPlannerMarketingPath, publicRoutes } from "@/config/routes"
 import { track } from "@/lib/analytics"
 import { cn } from "cn"
@@ -49,7 +49,7 @@ function headerAction(pathname: string): HeaderAction | null {
     }
   }
   if (pathname.startsWith(publicRoutes.contact)) return null
-  return { href: "/#soluciones", label: "Explorar soluciones" }
+  return { href: `${publicRoutes.transport}#cotizacion`, label: "Cotizar transporte", event: analyticsEvents.quoteStart }
 }
 
 export function CorporateHeader() {
@@ -57,6 +57,7 @@ export function CorporateHeader() {
   const [open, setOpen] = useState(false)
   const plannerContext = isPlannerMarketingPath(pathname)
   const action = headerAction(pathname)
+  const nav = plannerContext ? plannerHeaderNav : corporateNav
 
   return (
     <header className="sticky top-0 z-50 border-b border-white/10 bg-[#091B35] text-white">
@@ -70,7 +71,7 @@ export function CorporateHeader() {
             <Logo label={group.name} inverted priority />
           </Link>
           <nav className="hidden items-center gap-0.5 lg:flex" aria-label="Principal">
-            {corporateNav.map((item) => {
+            {nav.map((item) => {
               const active = isCorporateNavActive(item.id, pathname)
               return (
                 <Link
@@ -125,7 +126,7 @@ export function CorporateHeader() {
               </SheetTitle>
             </SheetHeader>
             <nav className="flex flex-col gap-1 px-3 pb-8" aria-label="Móvil">
-              {corporateNav.map((item) => {
+              {nav.map((item) => {
                 const active = isCorporateNavActive(item.id, pathname)
                 return (
                   <Link

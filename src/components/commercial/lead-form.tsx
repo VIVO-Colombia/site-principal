@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 
 import { submitLeadAction } from "@/app/actions/leads"
 import { TurnstileField } from "@/components/auth/turnstile-field"
@@ -10,6 +10,7 @@ import { Label } from "@/components/ui/label"
 import { analyticsEvents, type AnalyticsEvent } from "@/config/analytics"
 import { publicRoutes } from "@/config/routes"
 import { track } from "@/lib/analytics"
+import { TRANSPORT_DRAFT_KEY, type TransportDraft } from "@/lib/transport/draft"
 import type { LeadKind } from "@/lib/validations/leads"
 import { cn } from "cn"
 
@@ -29,9 +30,23 @@ export function LeadForm({
   const [success, setSuccess] = useState<string | null>(null)
   const [token, setToken] = useState("")
   const [started, setStarted] = useState(false)
-  const [topic, setTopic] = useState<"software" | "transporte" | "otro">(
-    kind === "software" ? "software" : "otro"
+  const [topic, setTopic] = useState<"software" | "transporte" | "planner" | "general">(
+    kind === "software" ? "software" : "general"
   )
+  const [draft, setDraft] = useState<TransportDraft | null>(null)
+
+  useEffect(() => {
+    if (kind !== "quote") return
+    const handle = window.setTimeout(() => {
+      try {
+        const raw = sessionStorage.getItem(TRANSPORT_DRAFT_KEY)
+        if (raw) setDraft(JSON.parse(raw) as TransportDraft)
+      } catch {
+        setDraft(null)
+      }
+    }, 0)
+    return () => window.clearTimeout(handle)
+  }, [kind])
 
   if (!ready) {
     return (
@@ -83,6 +98,14 @@ export function LeadForm({
             weightVolume: String(formData.get("weightVolume") ?? ""),
             estimatedDate: String(formData.get("estimatedDate") ?? ""),
             message: String(formData.get("message") ?? ""),
+            originAddress: String(formData.get("originAddress") ?? ""),
+            destinationAddress: String(formData.get("destinationAddress") ?? ""),
+            distanceLabel: String(formData.get("distanceLabel") ?? ""),
+            vehicleLabel: String(formData.get("vehicleLabel") ?? ""),
+            helpersLabel: String(formData.get("helpersLabel") ?? ""),
+            estimateLabel: String(formData.get("estimateLabel") ?? ""),
+            pendingNotes: String(formData.get("pendingNotes") ?? ""),
+            accessNotes: String(formData.get("accessNotes") ?? ""),
             consent: formData.get("consent") === "on",
             turnstileToken: token,
             companyUrl: String(formData.get("companyUrl") ?? ""),
@@ -127,11 +150,19 @@ export function LeadForm({
         <Field label="Teléfono" name="phone" type="tel" autoComplete="tel" required />
         {kind === "quote" ? (
           <>
-            <Field label="Ciudad de origen" name="originCity" autoComplete="address-level2" required />
-            <Field label="Ciudad de destino" name="destinationCity" required />
-            <Field label="Tipo de carga" name="cargoType" required />
-            <Field label="Peso o volumen aproximado" name="weightVolume" />
-            <Field label="Fecha estimada" name="estimatedDate" type="date" />
+            <Field label="Ciudad de origen" name="originCity" autoComplete="address-level2" required defaultValue={draft?.originCity || draft?.originLabel} />
+            <Field label="Dirección de origen" name="originAddress" defaultValue={draft?.originLabel} />
+            <Field label="Ciudad de destino" name="destinationCity" required defaultValue={draft?.destinationCity || draft?.destinationLabel} />
+            <Field label="Dirección de destino" name="destinationAddress" defaultValue={draft?.destinationLabel} />
+            <Field label="Tipo de carga" name="cargoType" required defaultValue={draft?.cargo} />
+            <Field label="Peso o volumen aproximado" name="weightVolume" defaultValue={draft?.weight} />
+            <Field label="Fecha estimada" name="estimatedDate" type="date" defaultValue={draft?.date} />
+            <Field label="Categoría de vehículo" name="vehicleLabel" defaultValue={draft?.vehicle} />
+            <Field label="Ayudantes" name="helpersLabel" defaultValue={draft?.helpers} />
+            <Field label="Condiciones de acceso" name="accessNotes" defaultValue={draft?.access} />
+            <Field label="Distancia calculada" name="distanceLabel" defaultValue={draft?.distance} />
+            <Field label="Valor estimado" name="estimateLabel" defaultValue={draft?.estimate} />
+            <Field label="Conceptos pendientes" name="pendingNotes" defaultValue={draft?.pending} />
           </>
         ) : null}
         {kind === "contact" ? (
@@ -144,9 +175,10 @@ export function LeadForm({
               onChange={(event) => setTopic(event.target.value as typeof topic)}
               className={cn(fieldClass, "mt-2 w-full border border-input")}
             >
-              <option value="transporte">Transportar mercancía</option>
-              <option value="software">Conocer VIVO Software</option>
-              <option value="otro">Otro mensaje</option>
+              <option value="transporte">Transporte</option>
+              <option value="software">Soluciones de software</option>
+              <option value="planner">VIVO Planner</option>
+              <option value="general">Consulta general</option>
             </select>
           </div>
         ) : null}
@@ -204,18 +236,20 @@ function Field({
   type = "text",
   required = false,
   autoComplete,
+  defaultValue,
 }: {
   label: string
   name: string
   type?: string
   required?: boolean
   autoComplete?: string
+  defaultValue?: string
 }) {
   return (
     <div>
       <Label htmlFor={name}>
         {label}
-        {required ? <span className="text-[#2457B2]"> *</span> : null}
+        {required ? <span className="text-[#315BFF]"> *</span> : null}
       </Label>
       <Input
         id={name}
@@ -223,6 +257,8 @@ function Field({
         type={type}
         required={required}
         autoComplete={autoComplete}
+        defaultValue={defaultValue}
+        key={defaultValue ? `${name}-${defaultValue}` : name}
         className={cn(fieldClass, "mt-2")}
       />
     </div>

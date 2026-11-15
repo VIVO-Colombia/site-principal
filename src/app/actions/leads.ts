@@ -2,7 +2,8 @@
 
 import { headers } from "next/headers"
 
-import { getLeadWebhookUrl, isLeadChannelConfigured } from "@/lib/env"
+import { getLeadWebhookUrl, isWeb3FormsConfigured } from "@/lib/env"
+import { commercialMail } from "@/lib/transport/mail"
 import { createServiceSupabaseClient } from "@/lib/supabase/admin"
 import { verifyTurnstileToken } from "@/lib/turnstile"
 import { leadSchema, type LeadInput } from "@/lib/validations/leads"
@@ -48,7 +49,10 @@ function rowFrom(lead: LeadInput) {
     cargo_type: lead.kind === "quote" ? lead.cargoType : null,
     weight_volume: lead.kind === "quote" ? lead.weightVolume || null : null,
     estimated_date: lead.kind === "quote" && lead.estimatedDate ? lead.estimatedDate : null,
-    message: lead.kind === "quote" ? lead.message || null : [lead.topic, lead.message].filter(Boolean).join(" — ") || null,
+    message:
+      lead.kind === "quote"
+        ? [lead.message, lead.pendingNotes, lead.estimateLabel].filter(Boolean).join("\n") || null
+        : [lead.topic, lead.message].filter(Boolean).join(" — ") || null,
   }
 }
 
@@ -62,9 +66,10 @@ export async function submitLeadAction(input: unknown): Promise<LeadResult> {
     return { success: "Recibimos tu solicitud." }
   }
 
-  if (!isLeadChannelConfigured()) {
+  if (!isWeb3FormsConfigured()) {
     return {
-      error: "El canal de solicitudes todavía no está configurado. No enviamos los datos a ningún destino.",
+      error:
+        "El formulario no está configurado: falta WEB3FORMS_ACCESS_KEY. No enviamos la solicitud ni simulamos el éxito.",
     }
   }
 
@@ -77,41 +82,59 @@ export async function submitLeadAction(input: unknown): Promise<LeadResult> {
   }
 
   const row = rowFrom(parsed.data)
-  let stored = false
-  let forwarded = false
+  const mail = commercialMail(parsed.data)
+  const formData = new FormData()
+  formData.append("access_key", process.env.WEB3FORMS_ACCESS_KEY!.trim())
+  formData.append("subject", mail.subject)
+  formData.append("from_name", "VIVO Colombia")
+  formData.append("name", parsed.data.name)
+  formData.append("email", parsed.data.email)
+  formData.append("phone", parsed.data.phone)
+  formData.append("message", mail.body)
+  formData.append("botcheck", "")
+
+  let delivered = false
+  try {
+    const response = await fetch("https://api.web3forms.com/submit", {
+      method: "POST",
+      body: formData,
+      signal: AbortSignal.timeout(12000),
+    })
+    const data = (await response.json()) as { success?: boolean }
+    delivered = response.ok && data.success === true
+  } catch {
+    delivered = false
+  }
+
+  if (!delivered) {
+    return {
+      error: "Web3Forms no confirmó la recepción. Revisa la conexión e inténtalo de nuevo.",
+    }
+  }
 
   const supabase = createServiceSupabaseClient()
   if (supabase) {
-    const { error } = await supabase.from("commercial_leads").insert(row)
-    if (!error) stored = true
+    await supabase.from("commercial_leads").insert(row)
   }
 
   const webhook = getLeadWebhookUrl()
   if (webhook) {
     try {
-      const response = await fetch(webhook, {
+      await fetch(webhook, {
         method: "POST",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({ ...row, receivedAt: new Date().toISOString() }),
         signal: AbortSignal.timeout(8000),
       })
-      forwarded = response.ok
     } catch {
-      forwarded = false
-    }
-  }
-
-  if (!stored && !forwarded) {
-    return {
-      error:
-        "No pudimos registrar la solicitud. Revisa la configuración del almacenamiento o inténtalo más tarde.",
+      /* la confirmación ya la dio Web3Forms */
     }
   }
 
   if (parsed.data.kind === "quote") {
     return {
       success:
-        "Recibimos la cotización. La revisaremos con la información que enviaste. Este mensaje confirma la recepción, no un servicio ya acordado.",
+        "Recibimos tu solicitud. Nuestro equipo revisará la información para confirmar las condiciones y el valor del servicio.",
     }
   }
 

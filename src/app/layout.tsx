@@ -3,7 +3,7 @@ import type { Metadata, Viewport } from "next"
 import { Providers } from "@/components/providers"
 import { SkipLink } from "@/components/skip-link"
 import { group, site } from "@/config/brand"
-import { fhGiselle, geistMono, geistSans } from "@/lib/fonts"
+import { fhGiselle, geistMono, geistSans, manrope } from "@/lib/fonts"
 
 import "./globals.css"
 
@@ -43,7 +43,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html
       lang="es"
-      className={`${geistSans.variable} ${geistMono.variable} ${fhGiselle.variable} h-full antialiased`}
+      className={`${geistSans.variable} ${geistMono.variable} ${fhGiselle.variable} ${manrope.variable} h-full antialiased`}
     >
       <body className="flex min-h-full flex-col bg-background text-foreground">
         <SkipLink />
