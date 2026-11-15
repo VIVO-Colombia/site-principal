@@ -11,6 +11,8 @@ type LogoProps = {
   inverted?: boolean
   priority?: boolean
   label?: string
+  /** Marca corporativa nueva. Planner conserva el símbolo anterior si se omite. */
+  variant?: "planner" | "vivo"
 }
 
 export function Logo({
@@ -20,8 +22,36 @@ export function Logo({
   inverted = false,
   priority = false,
   label,
+  variant = "planner",
 }: LogoProps) {
   const name = label ?? productName()
+
+  if (variant === "vivo") {
+    return (
+      <span className={cn("inline-flex items-center gap-2.5", className)}>
+        <Image
+          src={inverted ? "/brand/vivo-v-white.png" : "/brand/vivo-v-navy.png"}
+          alt=""
+          width={114}
+          height={72}
+          priority={priority}
+          className={cn("h-8 w-auto", markClassName)}
+        />
+        {showWordmark ? (
+          <span
+            className={cn(
+              "font-heading text-[17px] font-semibold tracking-[-0.03em] whitespace-nowrap text-foreground",
+              inverted && "text-white"
+            )}
+          >
+            {name}
+          </span>
+        ) : (
+          <span className="sr-only">{name}</span>
+        )}
+      </span>
+    )
+  }
 
   return (
     <span className={cn("inline-flex items-center gap-2.5", className)}>

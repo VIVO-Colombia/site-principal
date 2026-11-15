@@ -17,7 +17,7 @@ export function CorporateFooter() {
       <div className="mx-auto grid w-full max-w-6xl gap-10 px-4 py-14 sm:px-6 md:grid-cols-[1.4fr_1fr_1fr_1fr]">
         <div>
           <Link href={publicRoutes.home} className="inline-flex min-h-11 items-center">
-            <Logo label={group.name} inverted />
+            <Logo label={group.name} inverted variant="vivo" />
           </Link>
           <p className="mt-4 max-w-xs text-sm leading-6 text-white/70">{group.tagline}</p>
           <p className="mt-3 max-w-xs text-sm leading-6 text-white/55">{group.description}</p>

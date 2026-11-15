@@ -68,7 +68,7 @@ export function CorporateHeader() {
             className="min-h-11 rounded-lg"
             aria-label={`${group.name}, ir al inicio`}
           >
-            <Logo label={group.name} inverted priority />
+            <Logo label={group.name} inverted priority variant={plannerContext ? "planner" : "vivo"} />
           </Link>
           <nav className="hidden items-center gap-0.5 lg:flex" aria-label="Principal">
             {nav.map((item) => {
@@ -122,7 +122,7 @@ export function CorporateHeader() {
           <SheetContent id="menu-movil" side="right" className="w-[min(100%,22rem)] bg-[#F6F8FC]">
             <SheetHeader>
               <SheetTitle>
-                <Logo label={group.name} />
+                <Logo label={group.name} variant={plannerContext ? "planner" : "vivo"} />
               </SheetTitle>
             </SheetHeader>
             <nav className="flex flex-col gap-1 px-3 pb-8" aria-label="Móvil">

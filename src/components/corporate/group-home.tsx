@@ -27,7 +27,7 @@ export function GroupHome() {
       <section className="holo-sheen relative overflow-hidden text-white">
         <div className="relative mx-auto grid w-full max-w-6xl items-end gap-12 px-4 py-16 sm:px-6 lg:grid-cols-[1.15fr_0.85fr] lg:py-28">
           <div>
-            <Logo label={group.name} inverted priority />
+            <Logo label={group.name} inverted priority variant="vivo" markClassName="h-14" />
             <h1 className="font-heading mt-8 max-w-3xl text-[2.7rem] leading-[0.96] font-medium tracking-[-0.045em] sm:text-6xl lg:text-[4.6rem]">
               Movemos negocios. Creamos soluciones.
             </h1>
